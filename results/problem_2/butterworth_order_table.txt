@@ -1,0 +1,15 @@
+2.2b step image, D0 = 40, P = 1024, profile row 255
+h(x) = ift{H(u, 0)} is the 1-d kernel from the central slice of the P x P filter
+
+filter                       OS %  d sample        min h       max h  |min h|/max h    sum h
+butterworth n=1            0.0000       nan   -2.938e-07  1.1663e-01     2.5191e-06  1.00000
+butterworth n=2            3.3590      13.5   -3.749e-03  8.6763e-02     4.3207e-02  1.00000
+butterworth n=3            5.6032      12.5   -7.906e-03  8.1812e-02     9.6639e-02  1.00000
+butterworth n=5            7.4995      12.5   -1.253e-02  7.9425e-02     1.5775e-01  1.00000
+butterworth n=10           8.4865      12.5   -1.569e-02  7.8447e-02     1.9995e-01  1.00000
+butterworth n=20           8.4337      12.5   -1.661e-02  7.8205e-02     2.1236e-01  1.00000
+ideal                      8.2688      12.5   -1.719e-02  7.9102e-02     2.1730e-01  1.00000
+gaussian D0=40             0.0000       nan   -1.388e-17  9.7915e-02     1.4173e-16  1.00000
+gaussian D0'=33.97         0.0000       nan   -6.939e-18  8.3161e-02     8.3439e-17  1.00000
+
+ideal-filter limit predicted for n -> infinity: 8.9490 %

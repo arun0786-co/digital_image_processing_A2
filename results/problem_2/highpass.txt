@@ -1,0 +1,11 @@
+2.3c high-pass on thumb_print (962x1026), P = 2052, common half-amplitude radius 50
+input mean = 142.728
+
+filter        H_HP(P/2,P/2)  mean (crop)  mean (padded)      std  components >0  specks <20px
+IHPF                  0.000       1.4226       8.29e-17   32.032            840           767
+BHPF n=4              0.000       1.4588       4.15e-17   31.486            868           790
+GHPF                  0.000       2.0654       5.53e-17   30.400           1088           991
+
+high-frequency emphasis H = k1 + k2 H_GHPF, k1 = 0.5, k2 = 0.75
+H_HFE(P/2, P/2) = 0.500 -> expected mean about k1 * mean(f) = 71.364
+output mean = 72.913, std = 40.455 (input std 40.427)

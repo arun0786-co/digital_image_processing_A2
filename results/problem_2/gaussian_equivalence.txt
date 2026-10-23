@@ -1,0 +1,7 @@
+2.2d frequency-domain GLPF vs scipy.ndimage.gaussian_filter, characters pattern, P = 1376
+sigma_s = P / (2 pi D0); scipy with mode='constant' (zero boundary, like the padding)
+
+   D0  sigma_s px   H at P/2  max err t=4  max err t=8  mean err t=8  interior max t=8
+   10     21.8997   0.00e+00    1.571e-02    6.253e-13     1.813e-13         4.832e-13
+   40      5.4749   5.74e-65    1.766e-02    3.126e-13     5.015e-14         3.126e-13
+  160      1.3687   9.66e-05    1.861e-02    3.306e-03     1.618e-04         3.306e-03

@@ -1,0 +1,25 @@
+2.2a ideal low-pass on the step image (B = 200 square, side 256, on A = 50), P = 1024
+profile row 255; left edge at x = 127.5; predicted OS = 100 (Si(pi)/pi - 1/2) = 8.9490 %
+
+  D0     OS %  pred %  d sample  d parabolic  P/(2D0)  P/(2D0+1)  d right edge    max g
+  10    3.440    8.95      50.5        50.45    51.20      48.76          50.5  205.160
+  20   11.447    8.95      26.5        26.20    25.60      24.98          26.5  217.170
+  40    8.269    8.95      12.5        12.76    12.80      12.64          12.5  212.403
+  80    8.779    8.95       6.5         6.43     6.40       6.36           6.5  213.169
+
+reconciliation: where the gap to 8.95 % comes from
+  2-d: the measured row above
+  1-d row: the same row filtered as if the image were constant along y (same P, same zero padding, both square edges and the padding jumps)
+  isolated: one edge, 16x longer grid with the same f_c = D0 / P, other edges far away
+  D0  OS 2-d %  OS 1-d row %  d 1-d row  OS isolated %  d isolated
+  10     3.440         7.775      44.18          8.949       51.20
+  20    11.447         9.210      25.61          8.955       25.61
+  40     8.269         9.721      12.81          8.948       12.81
+  80     8.779         9.425       6.44          9.036        6.44
+
+near the top-left corner: maximum of g inside the quadrant rows/cols 128..255
+  D0    max g    OS %  (row, col)  dist from top  dist from left  (1+OS_iso)^2-1 %
+  10  222.686  15.124  (181, 181)           53.5            53.5             18.70
+  20  227.040  18.026  (154, 154)           26.5            26.5             18.71
+  40  228.824  19.216  (141, 141)           13.5            13.5             18.70
+  80  228.193  18.795  (134, 134)            6.5             6.5             18.89

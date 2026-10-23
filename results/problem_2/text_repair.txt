@@ -1,0 +1,30 @@
+2.3b gaussian low-pass on text_gaps (444x508), P = 1016
+text pixels 17766, gap pixels bridged by a 3x3 closing 3602
+darkness = (255 - g) / 255; join = gap darkness / stroke darkness; contrast = stroke darkness - background darkness
+pieces = 8-connected components after thresholding halfway between stroke and background
+
+   D0  stroke     gap    join  contrast  pieces
+ orig   1.000   0.000   0.000     1.000     266
+   20   0.215   0.183   0.849     0.158      37
+   30   0.258   0.233   0.905     0.226      37
+   40   0.292   0.273   0.933     0.274      43
+   50   0.328   0.309   0.943     0.317      57
+   60   0.364   0.342   0.940     0.357     102
+   70   0.399   0.371   0.930     0.396     169
+   80   0.433   0.396   0.913     0.431     191
+   90   0.465   0.415   0.893     0.464     196
+  100   0.495   0.431   0.870     0.494     198
+  110   0.522   0.441   0.845     0.522     199
+  120   0.548   0.448   0.819     0.548     201
+  130   0.571   0.452   0.791     0.571     202
+  140   0.593   0.453   0.763     0.593     203
+  150   0.614   0.451   0.735     0.614     204
+  160   0.633   0.447   0.707     0.633     206
+  170   0.651   0.442   0.679     0.651     207
+  180   0.667   0.435   0.651     0.667     208
+  190   0.683   0.427   0.624     0.683     208
+  200   0.698   0.417   0.598     0.698     208
+
+rule: join >= 0.9 and pieces >= 0.90 * 208 (pieces at D0 = 200)
+chosen D0 = 80; its half-amplitude radius is D0 sqrt(2 ln 2) = 94.19
+ideal LPF at that radius: join 0.977, contrast 0.407, pieces 83, range [37.9, 317.6] (gaussian range [41.1, 255.0])

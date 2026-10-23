@@ -1,0 +1,29 @@
+problem 2, started 2026-10-23 16:46:44
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 2: psnr_sweep
+2.3a cameraman + gaussian noise sigma = 20.0, seed 2026, not clipped before filtering
+P = 1024, D0 swept 5..150 step 1 as asked, then 155..400 step 5 to find the true peak
+D0 is the half-amplitude radius on the padded grid; gaussian uses D0' = D0 / sqrt(2 ln 2)
+outputs clipped to [0, 255] for psnr, data range 255
+noisy input psnr = 22.459 dB
+
+filter                 best in 5..150  psnr dB  best overall  psnr dB  psnr D0=30  psnr D0=100
+ILPF                              150   27.491           215   28.690      19.723       24.940
+BLPF n=2                          150   28.735           210   29.719      20.418       26.219
+GLPF (matched D0')                150   28.517           215   29.558      20.324       26.107
+
+  saved results/problem_2/psnr_sweep.txt
+  saved results/problem_2/psnr_sweep.png
+  saved results/problem_2/psnr_sweep_best.png
+  done in 11.15 s
+
+problem 2 finished in 11.1 s

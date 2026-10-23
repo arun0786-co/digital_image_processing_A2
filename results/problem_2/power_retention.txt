@@ -1,0 +1,17 @@
+2.1b spectral power within radius r, characters pattern zero-padded to P = 1376
+dc share of total power = 22.395 %
+ alpha target %    radius r   alpha(r) %
+           90.0       15.30      90.0033
+           95.0       45.54      95.0002
+           99.0      409.04      99.0000
+           99.5      558.74      99.5000
+
+alpha at fixed radii
+  r =    5: alpha = 81.6134 %
+  r =   10: alpha = 86.9904 %
+  r =   20: alpha = 91.3797 %
+  r =   40: alpha = 94.2101 %
+  r =   80: alpha = 96.4260 %
+  r =  160: alpha = 97.7749 %
+  r =  320: alpha = 98.6497 %
+  r =  460: alpha = 99.1826 %

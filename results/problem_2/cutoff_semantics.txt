@@ -1,0 +1,11 @@
+2.1a low-pass value at D = D0 = 40, P = 1024
+filter                                analytic   make_filter
+ideal             1 (D <= D0 is inclusive) = 1.000000      1.000000
+butterworth n=1                 1/2 = 0.500000      0.500000
+butterworth n=2                 1/2 = 0.500000      0.500000
+butterworth n=10                1/2 = 0.500000      0.500000
+gaussian                  exp(-1/2) = 0.606531      0.606531
+
+matched gaussian: exp(-D0^2 / (2 D0'^2)) = 1/2  ->  D0' = D0 / sqrt(2 ln 2)
+sqrt(2 ln 2) = 1.177410, D0' = 33.9729 for D0 = 40
+make_filter('gaussian', 1024, 33.9729) at D = 40: 0.500000
