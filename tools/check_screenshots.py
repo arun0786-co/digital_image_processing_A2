@@ -13,10 +13,12 @@ usage, from the repository root: python tools/check_screenshots.py
 import re
 import subprocess
 import sys
+from difflib import SequenceMatcher
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD = ROOT / "tools" / ".build"
+PATH_MATCH = 0.85
 ERRORS = ["Traceback", "Error", "command not found", "No such file", "FAILED"]
 
 
@@ -53,6 +55,20 @@ def squash(text):
     return re.sub(r"[^a-z0-9]", "", re.sub(r"[1l][0o]g", "log", text.lower()))
 
 
+def path_similarity(text, log_name):
+    """best similarity between the expected log path and any 'log written to' line.
+    the long path line is where ocr errs most ('1ogs', 'oroblem', 'lo0'), so an
+    exact match is too strict; a different log name still scores well below 0.85."""
+    expected = squash("results/logs/" + log_name)
+    best = 0.0
+    for line in text.splitlines():
+        if "writ" not in line.lower():
+            continue
+        tail = squash(line.split("results", 1)[-1] if "results" in line else line)
+        best = max(best, SequenceMatcher(None, expected, squash("results") + tail).ratio())
+    return best
+
+
 def check(shot, text):
     problems = []
     for word in ERRORS:
@@ -71,6 +87,10 @@ def check(shot, text):
             log_text = log.read_text()
             started = re.search(r"started (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", text)
             finished = re.search(r"problem\s*\d,?\s*finished\s*in\s*(\d+\.\d)\s*s", text)
+            # the fuzzy path match below cannot tell problem 4 from 5, this can
+            number = re.search(r"problem\s*(\d),?\s*finished", text)
+            if number and number.group(1) != log.name.split("_")[1].split(".")[0]:
+                problems.append(f"shows problem {number.group(1)}, expected {log.name}")
             log_finished = re.search(r"problem \d finished in (\d+\.\d) s", log_text)
             if started:
                 if started.group(1) not in log_text:
@@ -80,7 +100,7 @@ def check(shot, text):
                     problems.append(f"finish time {finished.group(1)} s differs from {log.name}")
             else:
                 problems.append("neither the start time nor the final timing could be matched to the log")
-            if squash("results/logs/" + log.name) not in squash(text):
+            if path_similarity(text, log.name) < PATH_MATCH:
                 problems.append(f"'{log.name}' not printed")
     # capture_run.sh hides the cursor, so the last prompt must end at '%'
     prompts = [line for line in text.splitlines() if "MacBook-Pro" in line]
