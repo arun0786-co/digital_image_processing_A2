@@ -1,6 +1,8 @@
 #!/bin/zsh
 # run a command in a new Terminal window from the repository root, wait for it
-# to finish, then save a screenshot of just that window.
+# to finish, then save a screenshot of just that window. the window is pushed
+# behind the one that had focus straight away, so typing elsewhere is not
+# redirected into it.
 # usage: tools/capture_run.sh "<command>" results/problem_k/name.png [wait_seconds]
 set -e
 cmd="$1"
@@ -12,11 +14,11 @@ marker="$(mktemp -u /tmp/capture_run.XXXXXX)"
 
 window_id=$(osascript <<EOF
 tell application "Terminal"
-    activate
+    set previous_id to id of front window
     set run_tab to do script ""
-    delay 0.5
     set run_window to front window
     if tty of selected tab of run_window is not tty of run_tab then error "front window is not the new tab"
+    set index of (first window whose id is previous_id) to 1
     set bounds of run_window to {40, 40, 1240, 1000}
     delay 0.3
     do script "cd '$root' && clear && $cmd; touch '$marker'" in run_tab
