@@ -1,0 +1,87 @@
+import numpy as np
+
+from common.freq import centred_spectrum, distance_grid, pad_image
+from common.local_stats import box_mean
+
+
+def padded_spectrum(image):
+    """mirror-pad to a square P = 2 max(rows, cols) and return the centred spectrum
+    (per channel for rgb) and P. mirroring avoids the dark border that zero padding
+    would leave after any low-pass filter."""
+    P = 2 * max(image.shape[:2])
+    return centred_spectrum(pad_image(image, P, P, mode="symmetric")), P
+
+
+def invert(spectrum, shape):
+    rows, cols = shape[:2]
+    full = np.fft.ifft2(np.fft.ifftshift(spectrum, axes=(0, 1)), axes=(0, 1))
+    return np.real(full)[:rows, :cols]
+
+
+def per_channel(fn, power):
+    if power.ndim == 2:
+        return fn(power)
+    return np.stack([fn(power[..., c]) for c in range(power.shape[2])], axis=2)
+
+
+def radial_average(power):
+    """replace each value by the mean over its ring of unit width around the centre."""
+    radius = np.round(distance_grid(power.shape[0], power.shape[1])).astype(int)
+    sums = np.bincount(radius.ravel(), weights=power.ravel())
+    counts = np.bincount(radius.ravel())
+    return (sums / np.maximum(counts, 1))[radius]
+
+
+def smoothed_periodogram(power, size=15):
+    """local box average of |G|^2 in the frequency plane, which keeps anisotropy."""
+    return box_mean(power, size)
+
+
+def signal_power(noisy_spectrum, noise_power, method):
+    """S_ff estimate: smoothed noisy periodogram minus the assumed flat noise power,
+    floored at zero. noise_power is in the same units as |G|^2."""
+    power = np.abs(noisy_spectrum) ** 2
+    smoother = radial_average if method == "radial" else smoothed_periodogram
+    return np.maximum(per_channel(smoother, power) - noise_power, 0.0)
+
+
+def wiener_gain(signal, noise_power):
+    """W = S_ff / (S_ff + S_nn)."""
+    return signal / (signal + noise_power)
+
+
+def noise_power_units(sigma, P):
+    """E|N(u, v)|^2 for white noise of per-pixel variance sigma^2 on an unnormalised
+    P x P dft: by parseval the mean of |N|^2 over frequencies is P^2 sigma^2."""
+    return P ** 2 * sigma ** 2
+
+
+def wiener_denoise(noisy, sigma, method="radial", noise_scale=1.0):
+    """white-noise wiener denoiser for an image in [0, 1]. sigma is the noise std in
+    the same units; noise_scale multiplies the assumed noise power (for 5.2)."""
+    spectrum, P = padded_spectrum(noisy)
+    assumed = noise_scale * noise_power_units(sigma, P)
+    gain = wiener_gain(signal_power(spectrum, assumed, method), assumed)
+    return invert(gain * spectrum, noisy.shape), gain
+
+
+def oracle_wiener(noisy, clean, sigma):
+    """wiener gain built from the clean image's own periodogram: an upper bound that
+    needs the reference, so it is labelled oracle."""
+    spectrum, P = padded_spectrum(noisy)
+    clean_spectrum, _ = padded_spectrum(clean)
+    gain = wiener_gain(np.abs(clean_spectrum) ** 2, noise_power_units(sigma, P))
+    return invert(gain * spectrum, noisy.shape)
+
+
+def estimate_noise_sigma(image):
+    """immerkaer (1996) estimate of white-noise std from the response to
+    [[1, -2, 1], [-2, 4, -2], [1, -2, 1]], which cancels local planes:
+    sigma = sqrt(pi / 2) / (6 (H - 2) (W - 2)) * sum |response|."""
+    mask = np.array([[1, -2, 1], [-2, 4, -2], [1, -2, 1]], dtype=np.float64)
+    rows, cols = image.shape
+    response = np.zeros((rows - 2, cols - 2))
+    for i in range(3):
+        for j in range(3):
+            response += mask[i, j] * image[i:i + rows - 2, j:j + cols - 2]
+    return float(np.sqrt(np.pi / 2) * np.abs(response).sum() / (6 * (rows - 2) * (cols - 2)))
