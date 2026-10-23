@@ -1,4 +1,4 @@
-problem 4, started 2026-10-23 17:04:04
+problem 4, started 2026-10-23 20:54:13
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -23,6 +23,6 @@ clean image on the same pixels: tv 0.017, p99 |grad| 1.000
 
   saved results/problem_4/blockiness.txt
   saved results/problem_4/blockiness.png
-  done in 0.29 s
+  done in 0.30 s
 
 problem 4 finished in 0.3 s

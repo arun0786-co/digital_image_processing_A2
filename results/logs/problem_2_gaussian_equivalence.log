@@ -1,4 +1,4 @@
-problem 2, started 2026-10-23 16:57:19
+problem 2, started 2026-10-23 20:52:28
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -19,6 +19,6 @@ sigma_s = P / (2 pi D0); scipy with mode='constant' (zero boundary, like the pad
   160      1.3687   9.66e-05    1.861e-02    3.306e-03     1.618e-04         3.306e-03
 
   saved results/problem_2/gaussian_equivalence.txt
-  done in 0.34 s
+  done in 0.32 s
 
 problem 2 finished in 0.3 s

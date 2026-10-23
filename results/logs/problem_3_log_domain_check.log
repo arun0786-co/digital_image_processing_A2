@@ -1,4 +1,4 @@
-problem 3, started 2026-10-23 16:57:43
+problem 3, started 2026-10-23 20:53:18
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -25,6 +25,6 @@ homomorphic prediction: output ~ L^gL R^gH, so the ratio becomes (input ratio)^g
 
   saved results/problem_3/log_domain_check.txt
   saved results/problem_3/log_domain_check.png
-  done in 0.37 s
+  done in 0.38 s
 
 problem 3 finished in 0.4 s

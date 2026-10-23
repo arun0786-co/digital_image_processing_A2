@@ -1,4 +1,4 @@
-problem 4, started 2026-10-23 17:03:53
+problem 4, started 2026-10-23 20:54:02
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -21,6 +21,6 @@ flat field 256x256, value 128, gaussian noise sigma 20.0, seed 11; sigma_r found
      11             0.02956     2.50    57.862              0.02956    0.02778
 
   saved results/problem_4/matching.txt
-  done in 1.91 s
+  done in 1.92 s
 
 problem 4 finished in 1.9 s

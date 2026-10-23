@@ -1,0 +1,25 @@
+problem 1, started 2026-10-23 20:51:21
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 1: conjugate_symmetry
+1.1a conjugate symmetry F(u, v) = conj F(-u, -v) for the real test image
+max |F(u,v) - conj F(-u,-v)|            = 4.146e-09
+max |F(u,v)|                            = 3.383e+07
+max |Im F| at the 4 self-conjugate bins = 2.073e-09
+complex values in the full spectrum     = 262144
+independent values (rfft2 half plane)   = 131584
+real degrees of freedom: 2*131070 pair values + 4 real = 262144 = M N
+
+  saved results/problem_1/conjugate_symmetry.txt
+  saved results/problem_1/conjugate_symmetry.png
+  done in 0.15 s
+
+problem 1 finished in 0.2 s

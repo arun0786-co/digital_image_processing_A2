@@ -1,4 +1,4 @@
-problem 1, started 2026-10-23 16:56:56
+problem 1, started 2026-10-23 20:51:35
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -31,6 +31,6 @@ max |circular - linear| = 130.023, corrupted pixels = 29820 (band of 15 px: 2982
 
   saved results/problem_1/wraparound_table.txt
   saved results/problem_1/wraparound.png
-  done in 1.00 s
+  done in 0.84 s
 
-problem 1 finished in 1.0 s
+problem 1 finished in 0.8 s

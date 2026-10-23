@@ -1,0 +1,16 @@
+problem 2, started 2026-10-23 20:52:07
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 2: transfer_functions
+  saved results/problem_2/transfer_functions.png
+  done in 0.17 s
+
+problem 2 finished in 0.2 s

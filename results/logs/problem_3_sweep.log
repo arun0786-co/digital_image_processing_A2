@@ -1,4 +1,4 @@
-problem 3, started 2026-10-23 16:57:46
+problem 3, started 2026-10-23 20:53:20
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -54,6 +54,6 @@ good setting  (D0, gL, gH) = (160, 0.5, 2.0)
 strongest halo (D0, gL, gH) = (40, 0.25, 2.0)
 
   saved results/problem_3/sweep_metrics.txt
-  done in 11.31 s
+  done in 11.13 s
 
-problem 3 finished in 11.3 s
+problem 3 finished in 11.1 s
