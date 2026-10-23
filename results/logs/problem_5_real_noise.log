@@ -1,0 +1,27 @@
+problem 5, started 2026-10-23 21:01:20
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 5: real_noise
+5.2c noise estimate check on the synthetic images (immerkaer 1996, per channel, averaged)
+ injected sigma  estimated sigma
+              5            5.895
+             10           10.531
+             20           20.278
+             40           40.125
+      clean ref            2.540   (texture floor of the method on this image)
+
+BLOCKED: no photo found in photos/ whose name starts with 'noisy'.
+the real-noise case study needs a genuinely noisy photo taken by the student.
+
+  saved results/problem_5/real_noise.txt
+  done in 0.34 s
+
+problem 5 finished in 0.3 s

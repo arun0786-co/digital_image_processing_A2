@@ -1,0 +1,27 @@
+problem 5, started 2026-10-23 21:00:50
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 5: edge_blur
+5.2 where the error sits, sigma = 20; rmse in 8-bit levels
+edge band = top 10 % of the clean luminance gradient (157287 px), flat = bottom 50 % (786432 px)
+
+method                      flat rmse  edge rmse  edge / flat
+noisy input                    18.016     19.697         1.09
+wiener radial                   6.910     14.987         2.17
+wiener oracle                   6.382     12.401         1.94
+gaussian LPF (oracle)           6.961     14.911         2.14
+bilateral (oracle)              5.589     12.930         2.31
+
+  saved results/problem_5/edge_blur.txt
+  saved results/problem_5/edge_profile.png
+  done in 26.59 s
+
+problem 5 finished in 26.6 s

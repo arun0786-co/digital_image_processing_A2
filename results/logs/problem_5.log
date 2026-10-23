@@ -1,0 +1,107 @@
+problem 5, started 2026-10-23 20:54:30
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 5: denoising_table
+5.1 reference_image.jpg, box-averaged 2x2 to 1024x1536 rgb, scaled to [0, 1]
+noise: clean + (sigma / 255) z, one z ~ N(0, 1) (seed 2026) shared by every method and sigma; the noisy input is not clipped
+metrics on outputs clipped to [0, 1], data range 1.0; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+all frequency-domain filters mirror-pad to P = 3072 x 3072
+wiener S_nn = known injected variance; S_ff = smoothed noisy periodogram - S_nn, floored at 0
+oracle = a parameter or spectrum taken from the clean reference
+
+ sigma  method                                        psnr dB    ssim
+     5  noisy input                                    34.288  0.8703
+     5  wiener, radial S_ff (not oracle)               36.211  0.9219
+     5  wiener, 15x15 smoothed S_ff (not oracle)       36.309  0.9231
+     5  wiener, clean periodogram (oracle)             37.237  0.9334
+     5  gaussian LPF D0=1327 (oracle-tuned)            36.096  0.9196
+     5  butterworth LPF n=2 D0=1400 (oracle-tuned)     36.185  0.9213
+     5  bilateral s_s=1 s_r=3sigma (oracle-tuned)      38.025  0.9520
+
+    10  noisy input                                    28.405  0.6715
+    10  wiener, radial S_ff (not oracle)               32.250  0.8434
+    10  wiener, 15x15 smoothed S_ff (not oracle)       32.345  0.8428
+    10  wiener, clean periodogram (oracle)             33.350  0.8642
+    10  gaussian LPF D0=862 (oracle-tuned)             32.234  0.8395
+    10  butterworth LPF n=2 D0=960 (oracle-tuned)      32.192  0.8419
+    10  bilateral s_s=1 s_r=3sigma (oracle-tuned)      33.872  0.8801
+
+    20  noisy input                                    22.658  0.4030
+    20  wiener, radial S_ff (not oracle)               29.137  0.7373
+    20  wiener, 15x15 smoothed S_ff (not oracle)       29.166  0.7291
+    20  wiener, clean periodogram (oracle)             30.185  0.7694
+    20  gaussian LPF D0=531 (oracle-tuned)             29.132  0.7366
+    20  butterworth LPF n=2 D0=624 (oracle-tuned)      29.007  0.7323
+    20  bilateral s_s=2 s_r=3sigma (oracle-tuned)      30.116  0.7714
+
+    40  noisy input                                    17.175  0.1856
+    40  wiener, radial S_ff (not oracle)               26.751  0.6216
+    40  wiener, 15x15 smoothed S_ff (not oracle)       26.638  0.5925
+    40  wiener, clean periodogram (oracle)             27.697  0.6622
+    40  gaussian LPF D0=310 (oracle-tuned)             26.697  0.6214
+    40  butterworth LPF n=2 D0=345 (oracle-tuned)      26.595  0.6227
+    40  bilateral s_s=3 s_r=3sigma (oracle-tuned)      26.953  0.6081
+
+bilateral tuned on rows 256-768, cols 512-1024 over s_s in [1.0, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0]; colour range distance, radius ceil(3 s_s)
+
+  saved results/problem_5/denoising_table.txt
+  saved results/problem_5/denoising_crops.png
+  done in 160.96 s
+
+== problem 5: wiener_gain
+  saved results/problem_5/wiener_gain.png
+  done in 6.38 s
+
+== problem 5: misspecification
+5.2 wiener at sigma = 20 with assumed noise power scale * S_nn (radial S_ff estimate)
+S_ff is re-estimated with the assumed S_nn, as a user of the filter would do
+band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
+
+ scale  psnr dB    ssim  flat rmse  edge rmse  mean gain
+   0.5   26.389  0.5633     11.533     13.959     0.5980
+   1.0   29.137  0.7373      6.910     14.987     0.1992
+   2.0   27.644  0.7038      6.767     20.257     0.0473
+
+  saved results/problem_5/misspecification.txt
+  saved results/problem_5/misspecification.png
+  done in 6.23 s
+
+== problem 5: edge_blur
+5.2 where the error sits, sigma = 20; rmse in 8-bit levels
+edge band = top 10 % of the clean luminance gradient (157287 px), flat = bottom 50 % (786432 px)
+
+method                      flat rmse  edge rmse  edge / flat
+noisy input                    18.016     19.697         1.09
+wiener radial                   6.910     14.987         2.17
+wiener oracle                   6.382     12.401         1.94
+gaussian LPF (oracle)           6.961     14.911         2.14
+bilateral (oracle)              5.589     12.930         2.31
+
+  saved results/problem_5/edge_blur.txt
+  saved results/problem_5/edge_profile.png
+  done in 3.38 s
+
+== problem 5: real_noise
+5.2c noise estimate check on the synthetic images (immerkaer 1996, per channel, averaged)
+ injected sigma  estimated sigma
+              5            5.895
+             10           10.531
+             20           20.278
+             40           40.125
+      clean ref            2.540   (texture floor of the method on this image)
+
+BLOCKED: no photo found in photos/ whose name starts with 'noisy'.
+the real-noise case study needs a genuinely noisy photo taken by the student.
+
+  saved results/problem_5/real_noise.txt
+  done in 0.24 s
+
+problem 5 finished in 177.2 s

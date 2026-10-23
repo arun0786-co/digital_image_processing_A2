@@ -1,0 +1,16 @@
+problem 5, started 2026-10-23 21:00:18
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 5: wiener_gain
+  saved results/problem_5/wiener_gain.png
+  done in 21.22 s
+
+problem 5 finished in 21.2 s
