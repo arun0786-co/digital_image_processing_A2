@@ -1,0 +1,250 @@
+\section{Motion blur and deblurring}
+
+The clean image is the $1024\times1536$ RGB reference of Problem 5, in $[0,1]$.
+Spatial coordinates are $x$ to the right and $y$ up, and the motion angle $\theta$ is
+measured counter-clockwise from the $+x$ axis; in array terms a point $t$ along the
+motion sits at column $+t\cos\theta$ and row $-t\sin\theta$ from the centre.
+Frequencies $f_x,f_y$ are in cycles per pixel with the same orientation.
+
+\subsection{Model and synthesis}
+
+\paragraph{PSF.} During the exposure the scene moves uniformly by a total distance $L$
+along $(\cos\theta,\sin\theta)$, so each scene point is recorded evenly along a
+segment of length $L$ centred on its true position:
+\begin{equation}
+h(x,y)=\frac1L\int_{-L/2}^{L/2}\delta(x-t\cos\theta,\;y-t\sin\theta)\,dt .
+\end{equation}
+It integrates to one, so blur preserves the mean brightness. \code{motion\_psf}
+integrates this over pixels: each pixel's weight is the length of segment inside its
+unit square divided by $L$, computed by sampling the segment at 50 midpoints per
+pixel and counting the samples that fall in each pixel. The weights are then
+normalised to sum exactly to one. For $L=21$, $\theta=30^\circ$ the kernel is
+$25\times25$ with 29 non-zero taps (\code{psf\_otf.png}). A horizontal segment with
+integer $L$ becomes exactly $L$ taps of $1/L$, which the unit tests check.
+
+\paragraph{Boundary convention.} Circular convolution is used for both the forward
+blur and every deconvolution: $g=\mathcal F^{-1}\{H\cdot\mathcal F\{f\}\}+n$, with $H$
+the DFT of the PSF placed with its centre at index $(0,0)$ of the image grid. The
+forward model and the inverse filters are then exactly consistent, and no pixels have
+to be cropped before measuring.
+
+\paragraph{Noise.} White Gaussian noise is added to the blurred image at
+\begin{equation}
+\text{SNR}_\text{dB}=10\log_{10}\frac{\sum_{x,y,c}f(x,y,c)^2}{\sum_{x,y,c}n(x,y,c)^2}
+\end{equation}
+with $f$ the clean image, at 50, 40, 30 and 20 dB. The noise is one standard-normal
+field (seed 2026) scaled to each level. The realised values are 50.000, 40.000,
+30.000 and 20.000 dB (noise standard deviations 0.00159, 0.00503, 0.01589 and
+0.05025), and the noisy image is not clipped.
+
+\paragraph{OTF.} Transforming the PSF with $\mathcal F\{h\}(f_x,f_y)=\iint h\,e^{-j2\pi(f_xx+f_yy)}$,
+the delta collapses the double integral, and with $p=f_x\cos\theta+f_y\sin\theta$,
+\begin{equation}
+H(f_x,f_y)=\frac1L\int_{-L/2}^{L/2}e^{-j2\pi tp}\,dt
+=\frac1L\cdot\frac{e^{-j\pi Lp}-e^{j\pi Lp}}{-j2\pi p}
+=\frac{\sin(\pi Lp)}{\pi Lp}=\sinc\big(L(f_x\cos\theta+f_y\sin\theta)\big).
+\end{equation}
+$H$ is real because the PSF is symmetric about its centre. It vanishes where
+$\sin(\pi Lp)=0$ with $p\ne0$, i.e.\ on the lines
+\begin{equation}
+f_x\cos\theta+f_y\sin\theta=\frac mL,\qquad m\in\mathbb Z\setminus\{0\}.
+\end{equation}
+$p$ is the component of the frequency vector along the motion direction
+$\mathbf u=(\cos\theta,\sin\theta)$, so adjacent zeros are $1/L$ apart along $\mathbf u$,
+and each zero set $\{\mathbf f:\mathbf f\cdot\mathbf u=m/L\}$ is a straight line
+perpendicular to $\mathbf u$. The zero lines are therefore perpendicular to the
+motion direction in the frequency plane: blur along $\mathbf u$ removes the
+frequencies that oscillate along $\mathbf u$, and $H$ does not change at all along
+the perpendicular direction. For $L=21$ the spacing is $1/L=0.04762$ cycles/pixel.
+
+The DFT samples $f_x=k/1536$, $f_y=l/1024$, and the zero lines generally pass
+between samples, so the sampled $|H|$ is small near them but not zero
+(Table~\ref{tab:zeros}). The smallest sampled value on the grid is
+$5.6\times10^{-9}$. Fig.~\ref{fig:otf} marks the sampled points nearest each predicted
+line and compares $|H|$ along the motion axis with $|\sinc(Lp)|$. They agree closely
+at low frequency (largest difference 0.0168 below 0.1 cycles/pixel) but differ by
+up to 0.51 overall. The largest difference is near a corner of the frequency
+plane, at $p\approx0.5$: the PSF is sampled on the pixel grid, so its spectrum is
+periodic, and $|H|$ rises again towards $p=\pm0.5$ (aliasing) while the continuous
+sinc keeps falling. The bumps near $p=\pm0.5$ in the right panel of
+Fig.~\ref{fig:otf} show this.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{rrrrrr}
+\toprule
+$m$ & $m/L$ & samples near the line & min $|H|$ & median $|H|$ & $|\sinc|$ at $(m+\tfrac12)/L$\\
+\midrule
+1 & 0.04762 & 1183 & $1.33\times10^{-7}$ & $3.96\times10^{-3}$ & 0.2122\\
+2 & 0.09524 & 1184 & $6.05\times10^{-6}$ & $4.54\times10^{-3}$ & 0.1273\\
+3 & 0.14286 & 1182 & $5.74\times10^{-6}$ & $3.94\times10^{-3}$ & 0.0909\\
+4 & 0.19048 & 1163 & $1.48\times10^{-5}$ & $1.18\times10^{-2}$ & 0.0707\\
+5 & 0.23810 & 1051 & $2.64\times10^{-6}$ & $1.06\times10^{-2}$ & 0.0579\\
+\bottomrule
+\end{tabular}
+\caption{Sampled OTF within half a frequency bin of each predicted zero line, against
+the sidelobe peak between lines (\code{otf\_zeros.txt}).}
+\label{tab:zeros}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{problem_6/psf_otf.png}
+\caption{PSF ($L=21$, $\theta=30^\circ$), $\log|H|$ with the sampled points nearest
+the predicted zeros marked in the left half, and $|H|$ along the motion direction
+against $|\sinc(Lp)|$.}
+\label{fig:otf}
+\end{figure}
+
+\subsection{Naive inverse filtering}
+
+$\hat F=G/H$ was implemented with a floor of $10^{-12}$ on $|H|$: values below it are
+replaced by $10^{-12}$ with the phase of $H$, only to avoid dividing by an exact
+zero. On this grid the floor is never reached, since the smallest $|H|$ is
+$5.6\times10^{-9}$. Without noise the inverse is exact: 219.25 dB, i.e.\ round-off. With
+noise it fails completely.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{rrrrrr}
+\toprule
+SNR (dB) & PSNR of $g$ & PSNR of $G/H$ & error near zeros & error away & ratio\\
+\midrule
+50 & 24.85 & 4.47 & $6.913\times10^{3}$ & $2.468\times10^{2}$ & 28.0\\
+40 & 24.82 & 4.46 & $2.186\times10^{4}$ & $7.806\times10^{2}$ & 28.0\\
+30 & 24.53 & 4.46 & $6.913\times10^{4}$ & $2.468\times10^{3}$ & 28.0\\
+20 & 22.49 & 4.46 & $2.186\times10^{5}$ & $7.806\times10^{3}$ & 28.0\\
+\bottomrule
+\end{tabular}
+\caption{Naive inverse filter. The error columns are the mean of
+$|\hat F-F|$ (green channel) over frequencies with $|pL-m|<0.05$, $m\ne0$ (near the
+zero lines) and with $|pL-m|>0.4$ (away from them) (\code{inverse\_filter.txt}).}
+\label{tab:inverse}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{problem_6/inverse_spectrum.png}
+\caption{At 30 dB: $\log|G|$, $\log|G/H|$ before any clipping, and the inverse
+output. Cyan marks the sampled frequencies nearest the predicted zeros in the left
+half; the right half shows the stripes themselves.}
+\label{fig:inverse}
+\end{figure}
+
+Since $G=HF+N$, the inverse gives $\hat F=F+N/H$: the image is recovered exactly and
+the noise is divided by $H$. \textbf{Because $\hat F-F=N/H$, any nonzero noise
+component at a frequency where $|H|\to0$ is multiplied by $1/|H|\to\infty$, so the
+error there can be made arbitrarily large.} In $\log|G|$ the zero lines are dark
+stripes perpendicular to the motion, partly filled in by the noise floor; in
+$\log|G/H|$ the same lines become bright stripes of amplified noise
+(Fig.~\ref{fig:inverse}). Near the zero lines the spectral error is 28 times larger
+than away from them, at every SNR, because the error $N/H$ is proportional to the
+noise and the ratio depends only on $|H|$. The stripes repeat every $1/L$ along the
+motion direction, so the longer the blur, the more zero lines cross the frequency
+plane and the more of the spectrum is ruined. Even at 50 dB the output is pure
+amplified noise (4.47 dB, worse than the blurred input).
+
+\subsection{Wiener deconvolution}
+
+\paragraph{Derivation.} With $G=HF+N$ and $f$, $n$ uncorrelated, the same
+orthogonality argument as in 5.1 gives $\operatorname{E}[F\overline G]=\overline H S_{ff}$
+and $\operatorname{E}|G|^2=|H|^2S_{ff}+S_{nn}$, so the linear MMSE filter is
+\begin{equation}
+\hat F=\frac{\overline H\,S_{ff}}{|H|^2S_{ff}+S_{nn}}\,G=\frac{\overline H}{|H|^2+S_{nn}/S_{ff}}\,G
+\;\approx\;\frac{\overline H(u,v)\,G(u,v)}{|H(u,v)|^2+K}.
+\end{equation}
+The last step replaces the frequency-dependent noise-to-signal ratio
+$S_{nn}/S_{ff}$ by one constant $K$. Images are in $[0,1]$ and the PSF sums to one,
+so $H(0,0)=1$, and $K$ is a dimensionless noise-to-signal power ratio: the DFT
+normalisation scales $S_{nn}$ and $S_{ff}$ by the same factor and cancels. Where
+$|H|^2\gg K$ the filter is the inverse $1/H$; where $|H|^2\ll K$ it tends to
+$\overline H/K\to0$ instead of blowing up.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{rrrrrrr}
+\toprule
+SNR (dB) & best $K$ & $10^{-\text{SNR}/10}$ & PSNR (dB) & SSIM & PSNR, $K=10^{-7}$ & PSNR, $K=1$\\
+\midrule
+50 & $1.58\times10^{-3}$ & $1.00\times10^{-5}$ & 31.261 & 0.8311 & 13.020 & 11.817\\
+40 & $6.31\times10^{-3}$ & $1.00\times10^{-4}$ & 28.306 & 0.7003 & 7.046 & 11.817\\
+30 & $2.51\times10^{-2}$ & $1.00\times10^{-3}$ & 25.825 & 0.5529 & 5.187 & 11.817\\
+20 & $6.31\times10^{-2}$ & $1.00\times10^{-2}$ & 22.692 & 0.3460 & 4.679 & 11.814\\
+\bottomrule
+\end{tabular}
+\caption{Wiener deconvolution, $K$ swept over 36 log-spaced values from $10^{-7}$ to 1.
+PSNR and SSIM on outputs clipped to $[0,1]$, data range 1 (\code{k\_sweep.txt}).}
+\label{tab:k}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.68\linewidth]{problem_6/k_sweep.png}\\
+\includegraphics[width=\linewidth]{problem_6/deblurred_comparison.png}
+\caption{Top: PSNR against $K$ for each SNR; dotted lines mark
+$K=10^{-\text{SNR}/10}$. Bottom: roof crop at 30 dB with $K$ too small, best and too
+large.}
+\label{fig:k}
+\end{figure}
+
+Small $K$ reproduces the inverse-filter failure: at $K=10^{-7}$ PSNR is between 4.7
+and 13.0 dB and the output is dominated by amplified noise (Fig.~\ref{fig:k}, middle crop). Large $K$
+under-deconvolves: at $K=1$ the gain $\overline H/(|H|^2+1)$ is at most one half
+(exactly $1/2$ at DC), so the output is a dim, still-blurred image (11.8 dB). In between, each
+curve has a clear optimum, and it moves to larger $K$ as the noise grows, from
+$1.6\times10^{-3}$ at 50 dB to $6.3\times10^{-2}$ at 20 dB. The restored image gains
+6.4 dB over the blurred input at 50 dB, but only 0.2 dB at 20 dB, where the noise
+leaves little to invert.
+
+The best $K$ is much larger than the flat-spectrum guess $K=10^{-\text{SNR}/10}$ (the
+ratio of total noise power to total signal power): 158 times at 50 dB, falling to
+6.3 times at 20 dB. $K$ stands in for $S_{nn}/S_{ff}(u,v)$ at the frequencies where it
+matters, the ones where $|H|^2$ is comparable to $K$. Those are mid and high
+frequencies, where a natural image's power is far below its average, which is
+dominated by low frequencies, so the real noise-to-signal ratio there is much
+higher than the global one. As the noise grows, the decisive frequencies move down
+towards the region where the image power is closer to its average, and the gap
+shrinks.
+
+\subsection{Estimating and removing a real blur}
+
+\paragraph{Why the stripes are perpendicular to the motion.} For a blurred photo
+$|G|=|H|\,|F|$, and $|H|$ vanishes on the lines $\mathbf f\cdot\mathbf u=m/L$, which
+are perpendicular to the motion direction $\mathbf u$. The log spectrum therefore
+shows dark stripes perpendicular to the motion, spaced $1/L$ apart, whatever the
+scene. The direction of the blur is the normal to the stripes, and the length is
+the reciprocal of their spacing.
+
+\paragraph{Estimator.} Taking the log separates blur from scene,
+$\log|G|=\log|H|+\log|F|$, and $\log|H|$ repeats every $1/L$ along $\mathbf u$. Its
+inverse transform, the cepstrum $\mathcal F^{-1}\{\log|G|\}$, therefore has a strong
+negative spike at distance $L$ from the origin in direction $\mathbf u$, which is the
+basis of Cannon's blur identification \cite{cannon}.
+\code{estimate\_blur} finds the most negative cepstrum value at radius 3 to 80 in one
+half-plane (the cepstrum is even) and refines its position with a three-point
+parabola along each axis. On the synthetic blurred images (true $\theta=30^\circ$,
+$L=21$) it returns $\theta$ between $30.3^\circ$ and $30.6^\circ$ and $L$ between 21.5
+and 21.6 at all four SNRs (\code{real\_blur.txt}). The length comes out about half a
+pixel long, which is consistent with the rasterised OTF departing from the ideal sinc
+at higher frequencies (Fig.~\ref{fig:otf}).
+
+\paragraph{Real photograph: blocked.} This part needs a genuinely motion-blurred
+photograph taken by the student, and none had been supplied when this report was
+produced. The case study is implemented and runs as soon as a file named
+\code{blur*} is placed in \code{photos/}. It downsamples the photo so the long side
+is at most 1536 pixels, applies a Hann window (which suppresses the cross that the
+image border puts in the spectrum), estimates $\theta$ and $L$ from the cepstrum, draws
+the estimated stripe spacing $1/L$ over the log spectrum, builds the PSF, and applies
+Wiener deconvolution with $K\in\{0.003,0.01,0.03\}$ after mirror padding by $2L$,
+since a real blur is not circular. With no sharp original, the result can only be
+judged qualitatively, so no PSNR or SSIM would be reported. The artefact analysis
+against the limits of the linear, spatially invariant model (camera rotation,
+changing velocity, occlusion, clipped highlights) cannot be written without the
+photograph.
+
+\paragraph{Conclusion.} Linear motion blur multiplies the spectrum by a sinc whose
+zero lines are perpendicular to the motion and $1/L$ apart. Those zeros make the naive
+inverse useless with any noise at all, while the scalar-$K$ Wiener filter recovers
+up to 6.4 dB. The best $K$ grows with the noise and is far larger than the global
+noise-to-signal ratio, because it has to represent the ratio at the frequencies
+where $H$ is weak.

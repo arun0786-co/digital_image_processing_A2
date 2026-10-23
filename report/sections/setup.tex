@@ -1,0 +1,50 @@
+\section*{Experimental setup}
+
+Every number in this report was produced by running the repository code on the
+machine in Table~\ref{tab:setup}. The tables are copied from the text files that
+the experiment drivers write to \code{results/problem\_k/}, and each run is also
+logged in \code{results/logs/} and captured as a Terminal screenshot.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+Item & Value \\
+\midrule
+CPU & Apple M4 Pro, 12 cores (8 performance + 4 efficiency) \\
+RAM & 24 GiB \\
+OS & macOS 15.7.7 (Darwin, arm64) \\
+Python & 3.11.9 \\
+NumPy & 2.4.6 \\
+SciPy & 1.17.1 (checking answers only) \\
+scikit-image & 0.26.0 (SSIM metric and checking only) \\
+Matplotlib, Pillow & 3.11.1, 12.3.0 (plots and image input/output only) \\
+\bottomrule
+\end{tabular}
+\caption{Machine and library versions used for all measurements.}
+\label{tab:setup}
+\end{table}
+
+\textbf{Rules followed.} Every operation a problem asks for is written with
+NumPy array arithmetic: the DFT matrix, all transfer functions, the homomorphic
+filter, the bilateral and Kuwahara filters, the Wiener filters, the motion PSF and
+the deconvolution filters. \code{numpy.fft} is used for transforms where the
+handout allows it. SciPy and scikit-image are called only to check answers
+(\code{scipy.signal.convolve2d}, \code{scipy.ndimage.gaussian\_filter} in 2.2d
+where the handout asks for it), for the SSIM metric, and for counting connected
+components when measuring results.
+
+\textbf{Inputs.} The supplied images are used as given: \code{q1.png} (Problem 1),
+the four Problem 2 images, \code{tunnel\_image.jpg} (Problem 3), \code{q4.png}
+(Problem 4) and \code{reference\_image.jpg} (Problems 5 and 6). Preprocessing is
+stated where it is applied. Random noise always comes from
+\code{numpy.random.default\_rng} with the seed given in the relevant section.
+
+\textbf{Scope.} The marks table on page~1 of the handout lists a Problem 7 (lens
+distortion), but the handout ends after Problem 6 and contains no Problem 7 text,
+so it is not attempted.
+
+\textbf{Reproducing the results.} From the repository root,
+\code{python src/run\_experiments.py} runs everything,
+\code{python src/run\_experiments.py --problem 2} runs one problem, and
+\code{python -m unittest discover -s tests} runs the correctness tests.
