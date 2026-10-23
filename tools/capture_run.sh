@@ -21,7 +21,7 @@ tell application "Terminal"
     set index of (first window whose id is previous_id) to 1
     set bounds of run_window to {40, 40, 1240, 1000}
     delay 0.3
-    do script "cd '$root' && clear && $cmd; touch '$marker'" in run_tab
+    do script "cd '$root' && clear && $cmd; tput civis; touch '$marker'" in run_tab
     return id of run_window
 end tell
 EOF
