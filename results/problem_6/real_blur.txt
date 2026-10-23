@@ -1,0 +1,11 @@
+6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta
+leaves a negative spike at distance about L along the motion direction
+validation on the synthetic case (true theta = 30, L = 21), luminance:
+image                            theta         L
+blurred, snr 50 dB                30.4      21.6
+blurred, snr 40 dB                30.4      21.5
+blurred, snr 30 dB                30.3      21.5
+blurred, snr 20 dB                30.6      21.6
+
+BLOCKED: no photo found in photos/ whose name starts with 'blur'.
+the case study needs a genuinely motion-blurred photo taken by the student.

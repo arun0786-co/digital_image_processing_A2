@@ -1,0 +1,79 @@
+problem 6, started 2026-10-23 21:05:54
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 6: psf_otf
+6.1 motion psf, L = 21 px, theta = 30.0 deg (counter-clockwise from +x, y up)
+discretisation: segment length inside each pixel / L (dense midpoint sampling), sum = 1.000000000000, kernel 25x25, 29 non-zero taps
+boundary convention: circular, for both the forward blur and every deconvolution; image 1024x1536
+max | |H_dft| - |sinc| | over all frequencies         = 0.5118
+max | |H_dft| - |sinc| | for radius < 0.1 cyc/px     = 0.0168
+
+zero lines fx cos(theta) + fy sin(theta) = m / L, spacing 1 / L = 0.04762 cycles/pixel along the motion direction
+samples within half a bin of the line: |p - m/L| < 0.5 / max(rows, cols), p the projection
+  m       m/L  samples    min |H|  median |H|  |sinc| at (m+1/2)/L
+  1   0.04762     1183   1.33e-07    3.96e-03               0.2122
+  2   0.09524     1184   6.05e-06    4.54e-03               0.1273
+  3   0.14286     1182   5.74e-06    3.94e-03               0.0909
+  4   0.19048     1163   1.48e-05    1.18e-02               0.0707
+  5   0.23810     1051   2.64e-06    1.06e-02               0.0579
+
+  saved results/problem_6/otf_zeros.txt
+  saved results/problem_6/psf_otf.png
+  done in 0.79 s
+
+== problem 6: inverse_filter
+6.2 naive inverse F = G / H, floor 1e-12 on |H| (values below it take the floor with H's phase)
+noise-free blurred image: psnr of G / H = 219.25 dB, min |H| on the grid = 5.562e-09
+error spectrum |F_hat - F| (green channel), mean near the zero lines (|pL - m| < 0.05, m != 0) vs away from them (|pL - m| > 0.4)
+
+ snr dB  realised    sigma   psnr G  psnr G/H  err near zeros   err away    ratio
+     50    50.000  0.00159    24.85      4.47       6.913e+03  2.468e+02     28.0
+     40    40.000  0.00503    24.82      4.46       2.186e+04  7.806e+02     28.0
+     30    30.000  0.01589    24.53      4.46       6.913e+04  2.468e+03     28.0
+     20    20.000  0.05025    22.49      4.46       2.186e+05  7.806e+03     28.0
+
+  saved results/problem_6/inverse_filter.txt
+  saved results/problem_6/inverse_spectrum.png
+  done in 1.64 s
+
+== problem 6: wiener_sweep
+6.3 wiener deconvolution F = conj(H) G / (|H|^2 + K), image in [0, 1], circular model, L = 21, theta = 30
+K swept over 36 log-spaced values from 1e-07 to 1e+00; psnr and ssim on outputs clipped to [0, 1], data range 1; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+nsr = 10^(-snr/10) = noise power / mean signal power, the flat-spectrum guess for K
+
+ snr dB    best K       nsr  psnr dB    ssim  psnr K=1e-7  psnr K=1
+     50  1.58e-03  1.00e-05   31.261  0.8311       13.020    11.817
+     40  6.31e-03  1.00e-04   28.306  0.7003        7.046    11.817
+     30  2.51e-02  1.00e-03   25.825  0.5529        5.187    11.817
+     20  6.31e-02  1.00e-02   22.692  0.3460        4.679    11.814
+
+  saved results/problem_6/k_sweep.txt
+  saved results/problem_6/k_sweep.png
+  saved results/problem_6/deblurred_comparison.png
+  done in 20.69 s
+
+== problem 6: real_blur
+6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta
+leaves a negative spike at distance about L along the motion direction
+validation on the synthetic case (true theta = 30, L = 21), luminance:
+image                            theta         L
+blurred, snr 50 dB                30.4      21.6
+blurred, snr 40 dB                30.4      21.5
+blurred, snr 30 dB                30.3      21.5
+blurred, snr 20 dB                30.6      21.6
+
+BLOCKED: no photo found in photos/ whose name starts with 'blur'.
+the case study needs a genuinely motion-blurred photo taken by the student.
+
+  saved results/problem_6/real_blur.txt
+  done in 0.22 s
+
+problem 6 finished in 23.3 s

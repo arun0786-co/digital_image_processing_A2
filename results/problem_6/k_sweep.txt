@@ -1,0 +1,9 @@
+6.3 wiener deconvolution F = conj(H) G / (|H|^2 + K), image in [0, 1], circular model, L = 21, theta = 30
+K swept over 36 log-spaced values from 1e-07 to 1e+00; psnr and ssim on outputs clipped to [0, 1], data range 1; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+nsr = 10^(-snr/10) = noise power / mean signal power, the flat-spectrum guess for K
+
+ snr dB    best K       nsr  psnr dB    ssim  psnr K=1e-7  psnr K=1
+     50  1.58e-03  1.00e-05   31.261  0.8311       13.020    11.817
+     40  6.31e-03  1.00e-04   28.306  0.7003        7.046    11.817
+     30  2.51e-02  1.00e-03   25.825  0.5529        5.187    11.817
+     20  6.31e-02  1.00e-02   22.692  0.3460        4.679    11.814

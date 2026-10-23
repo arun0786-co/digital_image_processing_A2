@@ -1,0 +1,14 @@
+6.1 motion psf, L = 21 px, theta = 30.0 deg (counter-clockwise from +x, y up)
+discretisation: segment length inside each pixel / L (dense midpoint sampling), sum = 1.000000000000, kernel 25x25, 29 non-zero taps
+boundary convention: circular, for both the forward blur and every deconvolution; image 1024x1536
+max | |H_dft| - |sinc| | over all frequencies         = 0.5118
+max | |H_dft| - |sinc| | for radius < 0.1 cyc/px     = 0.0168
+
+zero lines fx cos(theta) + fy sin(theta) = m / L, spacing 1 / L = 0.04762 cycles/pixel along the motion direction
+samples within half a bin of the line: |p - m/L| < 0.5 / max(rows, cols), p the projection
+  m       m/L  samples    min |H|  median |H|  |sinc| at (m+1/2)/L
+  1   0.04762     1183   1.33e-07    3.96e-03               0.2122
+  2   0.09524     1184   6.05e-06    4.54e-03               0.1273
+  3   0.14286     1182   5.74e-06    3.94e-03               0.0909
+  4   0.19048     1163   1.48e-05    1.18e-02               0.0707
+  5   0.23810     1051   2.64e-06    1.06e-02               0.0579
