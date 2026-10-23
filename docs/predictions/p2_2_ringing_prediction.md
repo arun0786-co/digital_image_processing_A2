@@ -1,6 +1,6 @@
 # 2.2 prediction: ringing of the step-edge image
 
-written 2026-10-23 16:31 IST, before any filtering code for problem 2 was
+written 2026-10-23 16:29 IST, before any filtering code for problem 2 was
 written or run. this file is not edited after the experiment.
 
 ## setup
