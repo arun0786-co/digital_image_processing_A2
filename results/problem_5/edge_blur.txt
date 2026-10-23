@@ -6,4 +6,11 @@ noisy input                    18.016     19.697         1.09
 wiener radial                   6.910     14.987         2.17
 wiener oracle                   6.382     12.401         1.94
 gaussian LPF (oracle)           6.961     14.911         2.14
-bilateral (oracle)              5.589     12.930         2.31
+bilateral (oracle)              5.935     12.009         2.02
+
+roof-line peak in the profile (row 425, column 1180), luminance:
+  clean 0.758
+  wiener radial 0.495
+  wiener oracle 0.567
+  gaussian LPF (oracle) 0.489
+  bilateral (oracle) 0.770

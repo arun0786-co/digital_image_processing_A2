@@ -1,0 +1,8 @@
+5.1 radial wiener gain (green channel) at selected radial frequencies
+each value is the mean gain over 0.01 cycles/pixel around the frequency
+
+ sigma  0.05 c/px   0.1 c/px   0.2 c/px   0.3 c/px   0.4 c/px   W = 0.5 at
+     5      0.996      0.985      0.940      0.857      0.674        0.470
+    10      0.983      0.942      0.796      0.601      0.340        0.319
+    20      0.937      0.804      0.494      0.281      0.114        0.187
+    40      0.787      0.510      0.199      0.101      0.036        0.088

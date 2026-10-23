@@ -1,4 +1,4 @@
-problem 5, started 2026-10-23 21:00:18
+problem 5, started 2026-10-23 21:21:25
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -10,7 +10,17 @@ matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
 == problem 5: wiener_gain
+5.1 radial wiener gain (green channel) at selected radial frequencies
+each value is the mean gain over 0.01 cycles/pixel around the frequency
+
+ sigma  0.05 c/px   0.1 c/px   0.2 c/px   0.3 c/px   0.4 c/px   W = 0.5 at
+     5      0.996      0.985      0.940      0.857      0.674        0.470
+    10      0.983      0.942      0.796      0.601      0.340        0.319
+    20      0.937      0.804      0.494      0.281      0.114        0.187
+    40      0.787      0.510      0.199      0.101      0.036        0.088
+
+  saved results/problem_5/wiener_gain.txt
   saved results/problem_5/wiener_gain.png
-  done in 21.22 s
+  done in 21.21 s
 
 problem 5 finished in 21.2 s

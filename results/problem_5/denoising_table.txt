@@ -28,7 +28,7 @@ oracle = a parameter or spectrum taken from the clean reference
     20  wiener, clean periodogram (oracle)             30.185  0.7694
     20  gaussian LPF D0=531 (oracle-tuned)             29.132  0.7366
     20  butterworth LPF n=2 D0=624 (oracle-tuned)      29.007  0.7323
-    20  bilateral s_s=2 s_r=3sigma (oracle-tuned)      30.116  0.7714
+    20  bilateral s_s=1.5 s_r=3sigma (oracle-tuned)    30.269  0.7698
 
     40  noisy input                                    17.175  0.1856
     40  wiener, radial S_ff (not oracle)               26.751  0.6216
@@ -36,6 +36,6 @@ oracle = a parameter or spectrum taken from the clean reference
     40  wiener, clean periodogram (oracle)             27.697  0.6622
     40  gaussian LPF D0=310 (oracle-tuned)             26.697  0.6214
     40  butterworth LPF n=2 D0=345 (oracle-tuned)      26.595  0.6227
-    40  bilateral s_s=3 s_r=3sigma (oracle-tuned)      26.953  0.6081
+    40  bilateral s_s=2 s_r=4sigma (oracle-tuned)      27.185  0.6328
 
-bilateral tuned on rows 256-768, cols 512-1024 over s_s in [1.0, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0]; colour range distance, radius ceil(3 s_s)
+bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0, 4.0, 6.0]; colour range distance, radius ceil(3 s_s)

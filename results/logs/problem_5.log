@@ -1,4 +1,4 @@
-problem 5, started 2026-10-23 20:54:30
+problem 5, started 2026-10-23 21:22:36
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -40,7 +40,7 @@ oracle = a parameter or spectrum taken from the clean reference
     20  wiener, clean periodogram (oracle)             30.185  0.7694
     20  gaussian LPF D0=531 (oracle-tuned)             29.132  0.7366
     20  butterworth LPF n=2 D0=624 (oracle-tuned)      29.007  0.7323
-    20  bilateral s_s=2 s_r=3sigma (oracle-tuned)      30.116  0.7714
+    20  bilateral s_s=1.5 s_r=3sigma (oracle-tuned)    30.269  0.7698
 
     40  noisy input                                    17.175  0.1856
     40  wiener, radial S_ff (not oracle)               26.751  0.6216
@@ -48,17 +48,27 @@ oracle = a parameter or spectrum taken from the clean reference
     40  wiener, clean periodogram (oracle)             27.697  0.6622
     40  gaussian LPF D0=310 (oracle-tuned)             26.697  0.6214
     40  butterworth LPF n=2 D0=345 (oracle-tuned)      26.595  0.6227
-    40  bilateral s_s=3 s_r=3sigma (oracle-tuned)      26.953  0.6081
+    40  bilateral s_s=2 s_r=4sigma (oracle-tuned)      27.185  0.6328
 
-bilateral tuned on rows 256-768, cols 512-1024 over s_s in [1.0, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0]; colour range distance, radius ceil(3 s_s)
+bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0, 4.0, 6.0]; colour range distance, radius ceil(3 s_s)
 
   saved results/problem_5/denoising_table.txt
   saved results/problem_5/denoising_crops.png
-  done in 160.96 s
+  done in 194.40 s
 
 == problem 5: wiener_gain
+5.1 radial wiener gain (green channel) at selected radial frequencies
+each value is the mean gain over 0.01 cycles/pixel around the frequency
+
+ sigma  0.05 c/px   0.1 c/px   0.2 c/px   0.3 c/px   0.4 c/px   W = 0.5 at
+     5      0.996      0.985      0.940      0.857      0.674        0.470
+    10      0.983      0.942      0.796      0.601      0.340        0.319
+    20      0.937      0.804      0.494      0.281      0.114        0.187
+    40      0.787      0.510      0.199      0.101      0.036        0.088
+
+  saved results/problem_5/wiener_gain.txt
   saved results/problem_5/wiener_gain.png
-  done in 6.38 s
+  done in 6.47 s
 
 == problem 5: misspecification
 5.2 wiener at sigma = 20 with assumed noise power scale * S_nn (radial S_ff estimate)
@@ -72,7 +82,7 @@ band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
 
   saved results/problem_5/misspecification.txt
   saved results/problem_5/misspecification.png
-  done in 6.23 s
+  done in 5.84 s
 
 == problem 5: edge_blur
 5.2 where the error sits, sigma = 20; rmse in 8-bit levels
@@ -83,11 +93,18 @@ noisy input                    18.016     19.697         1.09
 wiener radial                   6.910     14.987         2.17
 wiener oracle                   6.382     12.401         1.94
 gaussian LPF (oracle)           6.961     14.911         2.14
-bilateral (oracle)              5.589     12.930         2.31
+bilateral (oracle)              5.935     12.009         2.02
+
+roof-line peak in the profile (row 425, column 1180), luminance:
+  clean 0.758
+  wiener radial 0.495
+  wiener oracle 0.567
+  gaussian LPF (oracle) 0.489
+  bilateral (oracle) 0.770
 
   saved results/problem_5/edge_blur.txt
   saved results/problem_5/edge_profile.png
-  done in 3.38 s
+  done in 3.52 s
 
 == problem 5: real_noise
 5.2c noise estimate check on the synthetic images (immerkaer 1996, per channel, averaged)
@@ -104,4 +121,4 @@ the real-noise case study needs a genuinely noisy photo taken by the student.
   saved results/problem_5/real_noise.txt
   done in 0.24 s
 
-problem 5 finished in 177.2 s
+problem 5 finished in 210.5 s
