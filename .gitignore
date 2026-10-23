@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+
+# supplied inputs, handout and personal photos stay out of git
+A2/
+DIP_A2.pdf
+DIP_A2.zip
+photos/
+
+# latex intermediates
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
