@@ -1,0 +1,31 @@
+problem 4, started 2026-10-23 17:03:58
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 4: comparison
+4.1b q4.png + gaussian noise sigma 20.0, seed 2026; matched pairs from matching.txt
+psnr and ssim against the clean image, outputs clipped to [0, 255], data range 255; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+
+method                                    psnr dB    ssim  edge-band rmse
+noisy input                                22.265  0.1674          19.506
+kuwahara 5x5                               31.031  0.6069           8.114
+bilateral s=1.0 r=54.2 (5x5)               30.941  0.5935           8.693
+kuwahara 7x7                               33.558  0.7497           7.220
+bilateral s=1.5 r=51.9 (7x7)               33.416  0.7384           7.823
+kuwahara 11x11                             36.662  0.8788           7.294
+bilateral s=2.5 r=57.9 (11x11)             36.139  0.8727           8.749
+
+edge band: pixels within 3 px of a ground-truth jump larger than 5.0
+
+  saved results/problem_4/edge_preserving_table.txt
+  saved results/problem_4/edge_preservation_comparison.png
+  done in 2.78 s
+
+problem 4 finished in 2.8 s

@@ -1,0 +1,10 @@
+4.2b blockiness of classical vs soft kuwahara, noise sigma 20.0, seed 2026
+soft kuwahara: softmax weights exp(-(var_k - min var) / T), T = sigma^2 = 400
+measured on 242792 px at least 4 px from any true edge (flat regions and the ramp)
+clean image on the same pixels: tv 0.017, p99 |grad| 1.000
+
+ window     method       tv  p99 |grad|  psnr dB    ssim  edge rmse
+     11  classical    4.436      12.556   36.662  0.8788      7.294
+     11       soft    1.751       3.477   39.866  0.9638      6.870
+     15  classical    2.997       9.240   38.304  0.9270      7.679
+     15       soft    1.141       2.367   40.401  0.9764      7.794

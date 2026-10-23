@@ -1,0 +1,26 @@
+problem 4, started 2026-10-23 17:03:53
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 4: matching
+4.1a matched smoothing strength
+definition: same footprint (bilateral radius = kuwahara half-window a, sigma_s = a / 2)
+and the same noise-variance reduction var(out) / var(in) on a flat field
+flat field 256x256, value 128, gaussian noise sigma 20.0, seed 11; sigma_r found by bisection
+
+ window  kuwahara var ratio  sigma_s   sigma_r  bilateral var ratio  1/(a+1)^2
+      5             0.12859     1.00    54.191              0.12859    0.11111
+      7             0.06906     1.50    51.918              0.06906    0.06250
+     11             0.02956     2.50    57.862              0.02956    0.02778
+
+  saved results/problem_4/matching.txt
+  done in 1.91 s
+
+problem 4 finished in 1.9 s

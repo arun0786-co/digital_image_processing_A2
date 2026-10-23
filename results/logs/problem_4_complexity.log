@@ -1,0 +1,41 @@
+problem 4, started 2026-10-23 17:04:06
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 4: complexity
+4.2c per-pixel operation counts (adds/subs/compares, multiplies/divides, exponentials)
+kuwahara integral-image cost per pixel: 2 integral images (1 square, 4 adds), 4 sub-windows x (6 adds/subs for the two box sums, 1 sub for the variance, 3 mult/div), 3 compares for the argmin
+soft kuwahara adds 4 subs (minus min variance), 4 divides by T, 4 exp, 3 adds (weight sum), 4 mults + 3 adds (weighted mean), 1 divide
+bilateral per window tap: 1 sub, 1 square, 1 scale, 1 exp, 1 mult by the spatial weight, 1 mult by the value, 2 adds; plus 1 divide per pixel
+
+ window                            filter  add/sub/cmp  mult/div   exp  runtime s
+      5         kuwahara, integral images           35        13     0     0.0133
+      5             kuwahara, direct sums           71        48     0          -
+      5    soft kuwahara, integral images           45        22     4     0.0162
+      5                         bilateral           75       101    25     0.0275
+      7         kuwahara, integral images           35        13     0     0.0131
+      7             kuwahara, direct sums          127        76     0          -
+      7    soft kuwahara, integral images           45        22     4     0.0134
+      7                         bilateral          147       197    49     0.0630
+     11         kuwahara, integral images           35        13     0     0.0125
+     11             kuwahara, direct sums          287       156     0          -
+     11    soft kuwahara, integral images           45        22     4     0.0135
+     11                         bilateral          363       485   121     0.1550
+     15         kuwahara, integral images           35        13     0     0.0134
+     15             kuwahara, direct sums          511       268     0          -
+     15    soft kuwahara, integral images           45        22     4     0.0141
+     15                         bilateral          675       901   225     0.2776
+
+runtimes: median of 3 runs on the 512x512 noisy q4 image
+
+  saved results/problem_4/complexity.txt
+  done in 3.80 s
+
+problem 4 finished in 3.8 s
