@@ -1,4 +1,4 @@
-problem 2, started 2026-10-23 16:47:02
+problem 2, started 2026-10-23 16:57:39
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -25,6 +25,6 @@ output mean = 72.913, std = 40.455 (input std 40.427)
   saved results/problem_2/highpass.txt
   saved results/problem_2/highpass.png
   saved results/problem_2/ridge_maps_zoom.png
-  done in 1.53 s
+  done in 1.57 s
 
-problem 2 finished in 1.5 s
+problem 2 finished in 1.6 s

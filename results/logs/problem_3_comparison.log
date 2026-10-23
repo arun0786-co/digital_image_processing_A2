@@ -1,4 +1,4 @@
-problem 3, started 2026-10-23 16:53:40
+problem 3, started 2026-10-23 16:58:00
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -25,6 +25,6 @@ source check: 98.3 % of the full-resolution bright-region pixels have a channel 
   saved results/problem_3/homomorphic_comparison.png
   saved results/problem_3/profiles.png
   saved results/problem_3/histograms.png
-  done in 13.11 s
+  done in 11.74 s
 
-problem 3 finished in 13.1 s
+problem 3 finished in 11.7 s

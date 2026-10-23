@@ -1,0 +1,95 @@
+problem 3, started 2026-10-23 16:56:21
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 3: log_domain_check
+3.1 synthetic check: I = L R with a gaussian light (L from 0.03 to 1) and a block texture R in {0.4, 0.9}
+H: D0 = 20, gamma_L = 0.5, gamma_H = 1.5, c = 1.0, P = 1024, mirrored padding
+detail = mean 9x9 local std; lit region L > 0.9, dark region L < 0.06
+L_lit / L_dark (mean) = 22.20
+
+method                          detail lit  detail dark  lit / dark
+input I = L R                       0.2212       0.0097       22.69
+filter I directly                   0.3313       0.0146       22.73
+filter log|F(I)|                    3.7230       0.2250       16.55
+filter log I (homomorphic)          0.4468       0.0855        5.23
+
+homomorphic prediction: output ~ L^gL R^gH, so the ratio becomes (input ratio)^gL = 4.76
+
+  saved results/problem_3/log_domain_check.txt
+  saved results/problem_3/log_domain_check.png
+  done in 0.38 s
+
+== problem 3: sweep
+  saved results/problem_3/sweep_grid_d0_10.png
+  saved results/problem_3/sweep_grid_d0_40.png
+  saved results/problem_3/sweep_grid_d0_160.png
+3.2 homomorphic sweep on tunnel_image.jpg luminance, downsampled x4 to 911x750, P = 1822, c = 1.0
+outputs mapped to [0, 1] by their 0.1-99.9 percentile range
+shadow = darkest 25 % of the 31x31 smoothed input (170813 px), bright = top 1 % (6833 px)
+contrast = mean 15x15 local std; saturated = share >= 0.98; shadow lvls = distinct 8-bit output levels in the shadow
+reversal = share of the strongest 25 % of 15x15-smoothed input gradients that point the other way in the output (halo measure)
+
+  D0    gL    gH shadow contr bright contr bright sat blown out shadow lvls shadow mean  reversal
+           input       0.0015       0.0033      1.000    0.0116           7      0.0110    0.0000
+  10  0.25  1.25       0.0142       0.0157      0.076    0.0030          87      0.2347    0.0872
+  10  0.25  1.50       0.0150       0.0185      0.055    0.0027          89      0.2350    0.0968
+  10  0.25  2.00       0.0157       0.0237      0.012    0.0021          87      0.2175    0.1094
+  10  0.50  1.25       0.0069       0.0118      0.160    0.0038          37      0.0918    0.0350
+  10  0.50  1.50       0.0074       0.0149      0.101    0.0030          41      0.1010    0.0495
+  10  0.50  2.00       0.0081       0.0207      0.060    0.0023          43      0.1041    0.0724
+  10  0.75  1.25       0.0034       0.0085      0.313    0.0050          15      0.0306    0.0083
+  10  0.75  1.50       0.0037       0.0116      0.189    0.0038          18      0.0399    0.0188
+  10  0.75  2.00       0.0041       0.0177      0.087    0.0026          21      0.0475    0.0398
+  40  0.25  1.25       0.0186       0.0082      0.000    0.0024         102      0.3087    0.0966
+  40  0.25  1.50       0.0202       0.0093      0.000    0.0016         108      0.3213    0.1117
+  40  0.25  2.00       0.0224       0.0111      0.000    0.0014         110      0.3185    0.1323
+  40  0.50  1.25       0.0084       0.0061      0.156    0.0044          41      0.1102    0.0376
+  40  0.50  1.50       0.0096       0.0076      0.071    0.0035          47      0.1305    0.0531
+  40  0.50  2.00       0.0117       0.0106      0.001    0.0024          55      0.1536    0.0773
+  40  0.75  1.25       0.0039       0.0047      0.475    0.0070          16      0.0342    0.0085
+  40  0.75  1.50       0.0045       0.0061      0.222    0.0046          20      0.0475    0.0191
+  40  0.75  2.00       0.0056       0.0091      0.061    0.0030          25      0.0649    0.0428
+ 160  0.25  1.25       0.0195       0.0032      0.006    0.0025          85      0.2420    0.0226
+ 160  0.25  1.50       0.0219       0.0037      0.000    0.0021          96      0.2719    0.0312
+ 160  0.25  2.00       0.0261       0.0045      0.000    0.0017         111      0.3109    0.0470
+ 160  0.50  1.25       0.0082       0.0028      0.998    0.0128          31      0.0728    0.0027
+ 160  0.50  1.50       0.0094       0.0032      0.991    0.0127          37      0.0915    0.0058
+ 160  0.50  2.00       0.0117       0.0040      0.012    0.0023          46      0.1205    0.0137
+ 160  0.75  1.25       0.0037       0.0030      1.000    0.0121          13      0.0233    0.0002
+ 160  0.75  1.50       0.0043       0.0032      0.999    0.0123          15      0.0310    0.0008
+ 160  0.75  2.00       0.0054       0.0039      0.989    0.0123          20      0.0458    0.0035
+
+rule for a good setting: reversal <= 0.02, bright saturated <= 0.1, then the largest shadow contrast
+good setting  (D0, gL, gH) = (160, 0.5, 2.0)
+strongest halo (D0, gL, gH) = (40, 0.25, 2.0)
+
+  saved results/problem_3/sweep_metrics.txt
+  done in 10.62 s
+
+== problem 3: comparison
+3.2 homomorphic vs global histogram equalisation (assignment 1 equalise), settings (D0, gL, gH)
+shadow 170813 px, bright 6833 px; metrics as in sweep_metrics.txt
+
+method                                       shadow contr bright contr bright sat blown out shadow lvls shadow mean  reversal
+input                                              0.0015       0.0033      1.000    0.0116           7      0.0110    0.0000
+global histogram equalisation                      0.0321       0.0015      1.000    0.0218           7      0.1670    0.0005
+homomorphic (160, 0.5, 2.0) (good)                 0.0117       0.0040      0.012    0.0023          46      0.1205    0.0137
+homomorphic (40, 0.25, 2.0) (halo)                 0.0224       0.0111      0.000    0.0014         110      0.3185    0.1323
+
+source check: 98.3 % of the full-resolution bright-region pixels have a channel at 255, so the light is clipped in the jpeg itself
+
+  saved results/problem_3/local_contrast.txt
+  saved results/problem_3/homomorphic_comparison.png
+  saved results/problem_3/profiles.png
+  saved results/problem_3/histograms.png
+  done in 11.57 s
+
+problem 3 finished in 22.6 s

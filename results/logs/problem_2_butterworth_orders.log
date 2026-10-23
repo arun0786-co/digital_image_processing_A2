@@ -1,4 +1,4 @@
-problem 2, started 2026-10-23 16:46:38
+problem 2, started 2026-10-23 16:57:17
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -28,6 +28,6 @@ ideal-filter limit predicted for n -> infinity: 8.9490 %
 
   saved results/problem_2/butterworth_order_table.txt
   saved results/problem_2/butterworth_orders.png
-  done in 0.45 s
+  done in 0.46 s
 
-problem 2 finished in 0.4 s
+problem 2 finished in 0.5 s

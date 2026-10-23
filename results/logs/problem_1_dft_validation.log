@@ -1,4 +1,4 @@
-problem 1, started 2026-10-23 16:37:00
+problem 1, started 2026-10-23 16:56:46
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -14,8 +14,8 @@ pillow      12.3.0 (image io only)
 complex128, unnormalised forward transform, times are medians
 
 input                 max|F_custom-F_np|   max|F_np|   relative  max|idft2(F)-f|  t_custom s   t_fft2 s
-q1.png 512x512                 8.153e-09   3.383e+07   2.41e-16        6.452e-12      0.0127    0.00260
-q1 crop 256x384                4.564e-09   1.375e+07   3.32e-16        9.265e-12      0.0046    0.00066
+q1.png 512x512                 8.153e-09   3.383e+07   2.41e-16        6.452e-12      0.0133    0.00214
+q1 crop 256x384                4.564e-09   1.375e+07   3.32e-16        9.265e-12      0.0045    0.00062
 normal noise 64x48             1.208e-13   1.464e+02   8.25e-16        3.109e-15      0.0001    0.00002
 
   saved results/problem_1/dft_error_table.txt
