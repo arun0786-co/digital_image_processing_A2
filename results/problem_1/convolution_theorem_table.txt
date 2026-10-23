@@ -1,0 +1,15 @@
+1.1b circular convolution theorem: f (*) h <-> F H
+spatial side: direct circular sum over kernel taps (np.roll)
+frequency side: real(idft2(dft2(f) * dft2(h))), custom transforms
+
+kernel            max|g_sp - g_fr|   max|g_sp|   relative  max|Im g_fr|  max|G_sp - FH|
+box 3x3                  2.501e-12   2.550e+02   9.81e-15     3.145e-13       1.398e-08
+laplacian 5x5            6.412e-11   1.851e+03   3.46e-14     5.699e-12       3.317e-08
+random 7x7               4.093e-11   4.463e+03   9.17e-15     4.736e-12       3.255e-07
+
+random 7x7 kernel, spectrum samples
+(u, v)                       predicted F H        measured dft2(f (*) h)
+(0, 0)         -5.627403e+08+0.000000e+00j   -5.627403e+08+0.000000e+00j
+(5, 3)          6.338837e+06-8.990184e+06j    6.338837e+06-8.990184e+06j
+(100, -40)     -6.964199e+03-4.627895e+03j   -6.964199e+03-4.627895e+03j
+(-200, 17)     -5.036941e+03+9.049523e+03j   -5.036941e+03+9.049523e+03j

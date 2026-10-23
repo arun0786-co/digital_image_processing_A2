@@ -1,0 +1,8 @@
+1.1c synthetic image ground truth, 256x256
+f(x, y) = offset + sum A cos(2 pi (u x + v y) / N + phi), x row, y column
+offset = 128.0
+    u    v       A   phi (rad)
+    6   10   50.00    0.785398
+   20  -14   30.00   -1.047198
+    0   45   20.00    2.000000
+   90    5   10.00   -2.500000

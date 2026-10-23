@@ -1,0 +1,46 @@
+problem 1, started 2026-10-23 16:37:09
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 1: phase_magnitude
+1.2 phase / magnitude reconstructions of q1.png (custom dft2 / idft2)
+uniform noise U[0,1], seed 2026
+
+noise magnitude statistics (dc excluded)
+  var(eps) with |N| = mu (1 + eps)         = 0.2744   (rayleigh: 4/pi - 1 = 0.2732)
+
+noise-magnitude reconstruction r split as r = c p + residual (dc removed)
+  energy(residual) / energy(c p)          = 0.2744   (predicted 0.273)
+  corr(r, p)                              = 0.8858   (predicted 0.89)
+
+phase-only image p (flat magnitude, 1.2a)
+  max |Im p| / max |Re p|                 = 1.41e-15
+  corr(p, f)                              = 0.1841
+  corr(|p|, |grad f|)                     = 0.4806
+  corr(|r|, |grad f|)                     = 0.4077
+  corr(swap: |F_cameraman| with q1 phase, f) = 0.9057
+  corr(swap, cameraman)                   = 0.4907
+  corr(|F_q1| with cameraman phase, cameraman) = 0.9057
+
+zero-phase image r0 = idft2(|F|) (1.2b)
+  max |Im r0| / max |Re r0|               = 1.61e-16
+  max |r0(x,y) - r0(-x,-y)|               = 9.095e-13
+  location of the maximum                 = (0, 0)
+  r0(0,0) and sum|F|/N^2                  = 7071.5514, 7071.5514
+  mean of r0 and mean of f                = 129.0607, 129.0607
+  share of sum (r0 - mean)^2 within radius 8 of origin = 0.2138
+  share of energy outside radius 8 on the x = 0 or y = 0 lines = 0.0335 (those lines are 0.0039 of the pixels)
+
+  saved results/problem_1/phase_magnitude.txt
+  saved results/problem_1/phase_magnitude.png
+  saved results/problem_1/phase_magnitude_zoom.png
+  done in 0.70 s
+
+problem 1 finished in 0.7 s

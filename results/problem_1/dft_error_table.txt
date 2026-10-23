@@ -1,0 +1,7 @@
+1.1 custom separable dft F = W_M f W_N^T against numpy.fft.fft2
+complex128, unnormalised forward transform, times are medians
+
+input                 max|F_custom-F_np|   max|F_np|   relative  max|idft2(F)-f|  t_custom s   t_fft2 s
+q1.png 512x512                 8.153e-09   3.383e+07   2.41e-16        6.452e-12      0.0127    0.00260
+q1 crop 256x384                4.564e-09   1.375e+07   3.32e-16        9.265e-12      0.0046    0.00066
+normal noise 64x48             1.208e-13   1.464e+02   8.25e-16        3.109e-15      0.0001    0.00002

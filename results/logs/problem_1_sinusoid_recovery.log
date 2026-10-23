@@ -1,0 +1,47 @@
+problem 1, started 2026-10-23 16:37:06
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 1: sinusoid_recovery
+1.1c synthetic image ground truth, 256x256
+f(x, y) = offset + sum A cos(2 pi (u x + v y) / N + phi), x row, y column
+offset = 128.0
+    u    v       A   phi (rad)
+    6   10   50.00    0.785398
+   20  -14   30.00   -1.047198
+    0   45   20.00    2.000000
+   90    5   10.00   -2.500000
+
+  saved results/problem_1/sinusoid_ground_truth.txt
+1.1c parameters read from spectral peaks of the custom dft
+peaks found above 1e-3 of the largest non-dc peak: 4
+recovered offset = 128.0000000000 (truth 128.0)
+
+(u, v)        A true       A found      |dA|   phi true   phi found    |dphi|
+(6, 10)        50.00 50.0000000000   1.4e-14   0.785398    0.785398   3.6e-15
+(20, -14)      30.00 30.0000000000   3.6e-15  -1.047198   -1.047198   1.3e-15
+(0, 45)        20.00 20.0000000000   0.0e+00   2.000000    2.000000   4.4e-15
+(90, 5)        10.00 10.0000000000   3.6e-15  -2.500000   -2.500000   1.1e-14
+
+grid resolution: delta f = 1/N = 0.003906 cycles/pixel = 1 cycle/image
+
+off-grid frequency u = 10.5 cycles/image, A = 50, 1-d slice
+amplitude read from bins 10 and 11: 31.0731, 32.5559
+dirichlet prediction for a half-bin offset: 31.8312
+bins with amplitude above 1 grey level: 33
+pair (40.25, 40.75): separation 0.50 cycles/image, main peaks in the 16x zero-padded spectrum = 1
+pair (40.25, 41.75): separation 1.50 cycles/image, main peaks in the 16x zero-padded spectrum = 2
+
+  saved results/problem_1/sinusoid_recovery.txt
+  saved results/problem_1/sinusoid_recovery.png
+  saved results/problem_1/resolution_limit.png
+  done in 0.19 s
+
+problem 1 finished in 0.2 s

@@ -1,0 +1,7 @@
+1.1a conjugate symmetry F(u, v) = conj F(-u, -v) for the real test image
+max |F(u,v) - conj F(-u,-v)|            = 4.146e-09
+max |F(u,v)|                            = 3.383e+07
+max |Im F| at the 4 self-conjugate bins = 2.073e-09
+complex values in the full spectrum     = 262144
+independent values (rfft2 half plane)   = 131584
+real degrees of freedom: 2*131070 pair values + 4 real = 262144 = M N

@@ -1,0 +1,18 @@
+1.3a circular (unpadded) vs zero-padded linear convolution, 5x5 laplacian on q1.png
+max |linear_fft - scipy convolve2d same| = 4.533e-12
+max |circular - linear|                  = 1608.000
+corrupted pixels (|diff| > 1e-9 max|g|)  = 4080   (band of 2 px on every side: 4080)
+max |circular - linear| in the interior [2:-2, 2:-2] = 4.988e-12
+
+padded grid P (both axes) vs exactness of the 'same'-cropped result
+     P   max|g_P - g_linear|  corrupted pixels
+   512             1.608e+03              4080
+   513             3.490e+02              2044
+   514             6.821e-12                 0
+   515             8.911e-12                 0
+   516             0.000e+00                 0
+   520             5.144e-12                 0
+  1024             5.230e-12                 0
+
+31x31 box blur, same comparison (for the figure)
+max |circular - linear| = 130.023, corrupted pixels = 29820 (band of 15 px: 29820)
