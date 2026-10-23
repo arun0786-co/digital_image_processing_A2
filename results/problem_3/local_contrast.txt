@@ -1,0 +1,10 @@
+3.2 homomorphic vs global histogram equalisation (assignment 1 equalise), settings (D0, gL, gH)
+shadow 170813 px, bright 6833 px; metrics as in sweep_metrics.txt
+
+method                                       shadow contr bright contr bright sat blown out shadow lvls shadow mean  reversal
+input                                              0.0015       0.0033      1.000    0.0116           7      0.0110    0.0000
+global histogram equalisation                      0.0321       0.0015      1.000    0.0218           7      0.1670    0.0005
+homomorphic (160, 0.5, 2.0) (good)                 0.0117       0.0040      0.012    0.0023          46      0.1205    0.0137
+homomorphic (40, 0.25, 2.0) (halo)                 0.0224       0.0111      0.000    0.0014         110      0.3185    0.1323
+
+source check: 98.3 % of the full-resolution bright-region pixels have a channel at 255, so the light is clipped in the jpeg itself

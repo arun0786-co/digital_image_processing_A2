@@ -1,0 +1,30 @@
+problem 3, started 2026-10-23 16:53:40
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 3: comparison
+3.2 homomorphic vs global histogram equalisation (assignment 1 equalise), settings (D0, gL, gH)
+shadow 170813 px, bright 6833 px; metrics as in sweep_metrics.txt
+
+method                                       shadow contr bright contr bright sat blown out shadow lvls shadow mean  reversal
+input                                              0.0015       0.0033      1.000    0.0116           7      0.0110    0.0000
+global histogram equalisation                      0.0321       0.0015      1.000    0.0218           7      0.1670    0.0005
+homomorphic (160, 0.5, 2.0) (good)                 0.0117       0.0040      0.012    0.0023          46      0.1205    0.0137
+homomorphic (40, 0.25, 2.0) (halo)                 0.0224       0.0111      0.000    0.0014         110      0.3185    0.1323
+
+source check: 98.3 % of the full-resolution bright-region pixels have a channel at 255, so the light is clipped in the jpeg itself
+
+  saved results/problem_3/local_contrast.txt
+  saved results/problem_3/homomorphic_comparison.png
+  saved results/problem_3/profiles.png
+  saved results/problem_3/histograms.png
+  done in 13.11 s
+
+problem 3 finished in 13.1 s

@@ -1,0 +1,12 @@
+3.1 synthetic check: I = L R with a gaussian light (L from 0.03 to 1) and a block texture R in {0.4, 0.9}
+H: D0 = 20, gamma_L = 0.5, gamma_H = 1.5, c = 1.0, P = 1024, mirrored padding
+detail = mean 9x9 local std; lit region L > 0.9, dark region L < 0.06
+L_lit / L_dark (mean) = 22.20
+
+method                          detail lit  detail dark  lit / dark
+input I = L R                       0.2212       0.0097       22.69
+filter I directly                   0.3313       0.0146       22.73
+filter log|F(I)|                    3.7230       0.2250       16.55
+filter log I (homomorphic)          0.4468       0.0855        5.23
+
+homomorphic prediction: output ~ L^gL R^gH, so the ratio becomes (input ratio)^gL = 4.76

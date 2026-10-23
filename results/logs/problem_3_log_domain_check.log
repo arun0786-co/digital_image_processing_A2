@@ -1,0 +1,30 @@
+problem 3, started 2026-10-23 16:53:22
+cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
+ram         24 GiB
+os          Darwin 15.7.7 (arm64)
+python      3.11.9
+numpy       2.4.6
+scipy       1.17.1 (checks only)
+skimage     0.26.0 (ssim metric and checks only)
+matplotlib  3.11.1
+pillow      12.3.0 (image io only)
+
+== problem 3: log_domain_check
+3.1 synthetic check: I = L R with a gaussian light (L from 0.03 to 1) and a block texture R in {0.4, 0.9}
+H: D0 = 20, gamma_L = 0.5, gamma_H = 1.5, c = 1.0, P = 1024, mirrored padding
+detail = mean 9x9 local std; lit region L > 0.9, dark region L < 0.06
+L_lit / L_dark (mean) = 22.20
+
+method                          detail lit  detail dark  lit / dark
+input I = L R                       0.2212       0.0097       22.69
+filter I directly                   0.3313       0.0146       22.73
+filter log|F(I)|                    3.7230       0.2250       16.55
+filter log I (homomorphic)          0.4468       0.0855        5.23
+
+homomorphic prediction: output ~ L^gL R^gH, so the ratio becomes (input ratio)^gL = 4.76
+
+  saved results/problem_3/log_domain_check.txt
+  saved results/problem_3/log_domain_check.png
+  done in 0.39 s
+
+problem 3 finished in 0.4 s
