@@ -13,11 +13,13 @@ marker="$(mktemp -u /tmp/capture_run.XXXXXX)"
 window_id=$(osascript <<EOF
 tell application "Terminal"
     activate
-    set run_tab to do script "cd '$root' && clear && $cmd; touch '$marker'"
+    set run_tab to do script ""
     delay 0.5
     set run_window to front window
     if tty of selected tab of run_window is not tty of run_tab then error "front window is not the new tab"
     set bounds of run_window to {40, 40, 1240, 1000}
+    delay 0.3
+    do script "cd '$root' && clear && $cmd; touch '$marker'" in run_tab
     return id of run_window
 end tell
 EOF
