@@ -157,10 +157,17 @@ def radial_profile(transfer):
 
 def wiener_gain_plot(out):
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    marks = [0.05, 0.1, 0.2, 0.3, 0.4]
+    lines = ["5.1 radial wiener gain (green channel) at selected radial frequencies",
+             "each value is the mean gain over 0.01 cycles/pixel around the frequency", "",
+             f"{'sigma':>6s}" + "".join(f"{f'{m:g} c/px':>11s}" for m in marks) + f"{'W = 0.5 at':>13s}"]
     for sigma in SIGMAS:
         _, gain = wiener_denoise(noisy_image(sigma), sigma / 255.0, "radial")
         profile = radial_profile(gain[..., 1])
         frequency = np.arange(profile.size) / gain.shape[0]
+        values = [profile[np.abs(frequency - m) < 0.005].mean() for m in marks]
+        half = frequency[np.argmax(profile < 0.5)] if np.any(profile < 0.5) else float("nan")
+        lines.append(f"{sigma:6d}" + "".join(f"{v:11.3f}" for v in values) + f"{half:13.3f}")
         axes[0].semilogx(frequency[1:], profile[1:], label=f"sigma = {sigma}")
         if sigma == MISSPEC_SIGMA:
             axes[1].semilogx(frequency[1:], profile[1:], label="wiener, radial S_ff", color="black")
@@ -170,6 +177,7 @@ def wiener_gain_plot(out):
                 n = BUTTERWORTH_ORDER if kind == "butterworth" else None
                 lp = radial_profile(make_filter(kind, P, radius, n=n))
                 axes[1].semilogx(frequency[1:], lp[1:], color=colour, label=f"{kind} D0={radius:.0f} (oracle)")
+    write_table(out / "wiener_gain.txt", lines)
     axes[0].set_title("P5.1 wiener gain W(rho) (green channel) for each noise level")
     axes[1].set_title(f"P5.1 wiener gain vs fixed-cutoff low-pass, sigma = {MISSPEC_SIGMA}")
     for ax in axes:
@@ -239,10 +247,15 @@ def edge_blur(out):
     for name, result in methods:
         f_rmse, e_rmse = band_rmse(clean, result, flat), band_rmse(clean, result, edge)
         lines.append(f"{name:26s}{f_rmse:11.3f}{e_rmse:11.3f}{e_rmse / f_rmse:13.2f}")
-    write_table(out / "edge_blur.txt", lines)
 
     column = 1180
     rows_ = slice(420, 520)
+    clean_profile = luminance(clean)[rows_, column]
+    peak = rows_.start + int(np.argmax(clean_profile))
+    lines += ["", f"roof-line peak in the profile (row {peak}, column {column}), luminance:",
+              f"  clean {luminance(clean)[peak, column]:.3f}"]
+    lines += [f"  {name} {luminance(np.clip(result, 0, 1))[peak, column]:.3f}" for name, result in methods[1:]]
+    write_table(out / "edge_blur.txt", lines)
     fig, ax = plt.subplots(figsize=FIGSIZE)
     for name, result in [("clean", clean)] + methods[1:]:
         ax.plot(np.arange(rows_.start, rows_.stop), luminance(np.clip(result, 0, 1))[rows_, column], label=name)
