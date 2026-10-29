@@ -1,4 +1,4 @@
-problem 3, started 2026-10-29 19:02:00
+problem 3, started 2026-10-29 23:31:23
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -13,6 +13,8 @@ pillow      12.3.0 (image io only)
   saved results/problem_3/sweep_grid_d0_10.png
   saved results/problem_3/sweep_grid_d0_40.png
   saved results/problem_3/sweep_grid_d0_160.png
+  saved results/problem_3/sweep_d0.png
+  saved results/problem_3/sweep_gamma.png
 3.2 homomorphic sweep on tunnel_image.jpg luminance, downsampled x4 to 911x750, P = 1822, c = 1.0
 outputs mapped to [0, 1] by their 0.1-99.9 percentile range
 shadow = darkest 25 % of the 31x31 smoothed input (170813 px), bright = top 1 % (6833 px)
@@ -54,6 +56,6 @@ good setting  (D0, gL, gH) = (160, 0.5, 2.0)
 strongest halo (D0, gL, gH) = (40, 0.25, 2.0)
 
   saved results/problem_3/sweep_metrics.txt
-  done in 12.03 s
+  done in 23.91 s
 
-problem 3 finished in 12.0 s
+problem 3 finished in 23.9 s
