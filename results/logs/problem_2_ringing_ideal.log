@@ -1,4 +1,4 @@
-problem 2, started 2026-10-29 19:01:30
+problem 2, started 2026-10-29 23:29:12
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -39,6 +39,6 @@ near the top-left corner: maximum of g inside the quadrant rows/cols 128..255
   saved results/problem_2/ideal_ringing_table.txt
   saved results/problem_2/ideal_ringing_profiles.png
   saved results/problem_2/ideal_ringing_corner.png
-  done in 0.48 s
+  done in 0.85 s
 
-problem 2 finished in 0.5 s
+problem 2 finished in 0.9 s

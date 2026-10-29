@@ -1,4 +1,4 @@
-problem 2, started 2026-10-29 19:01:22
+problem 2, started 2026-10-29 23:28:58
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -23,6 +23,6 @@ sqrt(2 ln 2) = 1.177410, D0' = 33.9729 for D0 = 40
 make_filter('gaussian', 1024, 33.9729) at D = 40: 0.500000
 
   saved results/problem_2/cutoff_semantics.txt
-  done in 0.03 s
+  done in 0.08 s
 
-problem 2 finished in 0.0 s
+problem 2 finished in 0.1 s

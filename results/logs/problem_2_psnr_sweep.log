@@ -1,4 +1,4 @@
-problem 2, started 2026-10-29 19:01:43
+problem 2, started 2026-10-29 23:29:38
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -24,6 +24,6 @@ GLPF (matched D0')                150   28.517           215   29.558      20.32
   saved results/problem_2/psnr_sweep.txt
   saved results/problem_2/psnr_sweep.png
   saved results/problem_2/psnr_sweep_best.png
-  done in 12.26 s
+  done in 27.02 s
 
-problem 2 finished in 12.3 s
+problem 2 finished in 27.0 s

@@ -1,4 +1,4 @@
-problem 2, started 2026-10-29 19:01:24
+problem 2, started 2026-10-29 23:29:03
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -30,6 +30,6 @@ alpha at fixed radii
 
   saved results/problem_2/power_retention.txt
   saved results/problem_2/power_retention.png
-  done in 0.38 s
+  done in 0.87 s
 
-problem 2 finished in 0.4 s
+problem 2 finished in 0.9 s
