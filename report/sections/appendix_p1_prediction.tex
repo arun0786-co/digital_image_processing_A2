@@ -1,0 +1,62 @@
+\subsection{1.2 prediction: test-image phase with white-noise magnitude}\label{app:pred-phase}
+
+written 2026-10-23 16:28 IST, before any phase/magnitude code was written or run. this file is not edited after the experiment. discrepancies go in the report.
+
+\subsubsection*{setup}
+
+f is the 512 x 512 test image \texttt{q1.png}, N = 512, F = \textbar{}F\textbar{} e\textasciicircum{}\{j phi\}. n is uniform white noise, n(x, y) \textasciitilde{} U[0, 1] i.i.d., with dft N\_n(u, v). the reconstruction is
+
+\begin{verbatim}
+r = idft{ |N_n(u, v)| e^{j phi(u, v)} }.
+\end{verbatim}
+
+\subsubsection*{derivation}
+
+\textbf{1. statistics of the noise magnitude.} for (u, v) != (0, 0), N\_n(u, v) is a sum of N\textasciicircum{}2 i.i.d. terms times unit phasors, so by the central limit theorem it is close to a circular complex gaussian with E\textbar{}N\_n\textbar{}\textasciicircum{}2 = N\textasciicircum{}2 var(n) = N\textasciicircum{}2 / 12. its magnitude is then rayleigh distributed. writing \textbar{}N\_n\textbar{} = mu (1 + eps),
+
+\begin{verbatim}
+E[eps] = 0,  var[eps] = var|N_n| / mu^2 = (1 - pi/4) / (pi/4) = 4/pi - 1 = 0.273.
+\end{verbatim}
+
+since n is real, \textbar{}N\_n(u, v)\textbar{} = \textbar{}N\_n(-u, -v)\textbar{}, so eps is even-symmetric, and eps at different frequencies is (nearly) uncorrelated. the dc term N\_n(0, 0) = sum n \textasciitilde{} N\textasciicircum{}2 / 2 is deterministic in practice, and phi(0, 0) = 0 because f \textgreater{} 0, so the dc term only adds a constant offset to r.
+
+\textbf{2. superposition.} by linearity of the inverse dft,
+
+\begin{verbatim}
+r = mu * p + mu * q + const,
+p = idft{ e^{j phi} },          (flat-magnitude, phase-only image, task 1.2a)
+q = idft{ eps e^{j phi} } = p (*) e,   e = idft{ eps },
+\end{verbatim}
+
+where (*) is circular convolution (convolution theorem: a product of spectra is a circular convolution in space).
+
+\textbf{3. what p looks like (shift theorem).} think of f as a superposition of localised features (edge segments, corners, thin lines) at positions (x\_k, y\_k). by the shift theorem each feature's spectrum carries the linear phase factor exp(-j 2 pi (u x\_k + v y\_k) / N). phase-only reconstruction keeps these factors and throws away the magnitude. a pure linear phase with flat magnitude inverts to an impulse at the same place:
+
+\begin{verbatim}
+idft{ exp(-j 2 pi (u x_k + v y_k) / N) } = delta(x - x_k, y - y_k).
+\end{verbatim}
+
+so the energy of p collects at the positions of the features of f, not at random positions. equivalently p = f (*) idft\{1 / \textbar{}F\textbar{}\}. natural-image spectra fall roughly like 1 / rho\textasciicircum{}alpha with alpha around 1 to 2, so dividing by \textbar{}F\textbar{} is a whitening high-pass that boosts high frequencies roughly like rho\textasciicircum{}alpha. smooth shading is suppressed and the places where many frequencies are in phase (edges, lines, corners) survive.
+
+prediction for p (1.2a): the outlines of the photographer, the coat edge, the tripod legs, the camera and the buildings on the horizon appear as thin signed lines (bright on one side, dark on the other), at their correct positions. flat areas (sky, the coat interior, the grass at coarse scale) go to a uniform mid grey. the overall brightness pattern of the photo (dark coat, bright sky) is lost. the grass texture survives as fine high-frequency texture, because it is full of small edges.
+
+\textbf{4. what q adds (noise magnitude case).} e = idft\{eps\} is a real, even, white-like random field with no spatial structure. convolving p with it spreads each feature's energy over the whole image with random weights, so q is a stationary speckle-like texture that is not concentrated at the edges. by parseval, the energy ratio of the two terms (dc excluded) is
+
+\begin{verbatim}
+energy(q) / energy(p) = mean(eps^2) = 4/pi - 1 = 0.273,
+\end{verbatim}
+
+i.e. a structured-to-speckle energy ratio of about 3.7 (5.6 dB).
+
+prediction for r: the same edge map as p, recognisable, but with visible grainy speckle over the whole frame, flat regions included. if r (dc removed) is fitted by least squares as r = c p + residual, then
+
+\begin{verbatim}
+energy(residual) / energy(c p) ~ 0.27,
+corr(r, p) ~ 1 / sqrt(1 + 0.273) ~ 0.89.
+\end{verbatim}
+
+the image will not look like a noisy copy of the photograph, it will look like a noisy edge drawing of it.
+
+\subsubsection*{1.2b prediction: original magnitude, zero phase}
+
+setting phi = 0 gives r\_0 = idft\{ \textbar{}F\textbar{} \}. \textbar{}F\textbar{} is real and even (\textbar{}F(u, v)\textbar{} = \textbar{}F(-u, -v)\textbar{} for real f), so r\_0 is real and even: r\_0(x, y) = r\_0(-x, -y) (mod N), i.e. point-symmetric about the origin. all cosines peak together at the origin, so r\_0 is a sharp peak at (0, 0) (the corners of the unshifted array, the centre after fftshift) with height sum \textbar{}F\textbar{} / N\textasciicircum{}2, falling off quickly. the periodic extension of the photo has strong discontinuities at the image border, which puts extra energy along the u = 0 and v = 0 axes, so the peak should have a faint horizontal and vertical cross through it. nothing of the photographer's shape will be recognisable, because the positions of features live in the phase, which is now gone.

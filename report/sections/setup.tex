@@ -1,50 +1,48 @@
-\section*{Experimental setup}
+\section*{Setup}
 
-Every number in this report was produced by running the repository code on the
-machine in Table~\ref{tab:setup}. The tables are copied from the text files that
-the experiment drivers write to \code{results/problem\_k/}, and each run is also
-logged in \code{results/logs/} and captured as a Terminal screenshot.
+Every number in this report comes from running the code in this repository on
+my laptop, and the handout asks for three details of it:
 
-\begin{table}[H]
-\centering
+\begin{center}
 \begin{tabular}{ll}
 \toprule
-Item & Value \\
-\midrule
-CPU & Apple M4 Pro, 12 cores (8 performance + 4 efficiency) \\
-RAM & 24 GiB \\
-OS & macOS 15.7.7 (Darwin, arm64) \\
-Python & 3.11.9 \\
-NumPy & 2.4.6 \\
-SciPy & 1.17.1 (checking answers only) \\
-scikit-image & 0.26.0 (SSIM metric and checking only) \\
-Matplotlib, Pillow & 3.11.1, 12.3.0 (plots and image input/output only) \\
+CPU & Apple M4 Pro, 12 cores (8 performance + 4 efficiency)\\
+RAM & 24 GiB\\
+NumPy & 2.4.6\\
 \bottomrule
 \end{tabular}
-\caption{Machine and library versions used for all measurements.}
-\label{tab:setup}
-\end{table}
+\end{center}
 
-\textbf{Rules followed.} Every operation a problem asks for is written with
-NumPy array arithmetic: the DFT matrix, all transfer functions, the homomorphic
-filter, the bilateral and Kuwahara filters, the Wiener filters, the motion PSF and
-the deconvolution filters. \code{numpy.fft} is used for transforms where the
-handout allows it. SciPy and scikit-image are called only to check answers
-(\code{scipy.signal.convolve2d}, \code{scipy.ndimage.gaussian\_filter} in 2.2d
-where the handout asks for it), for the SSIM metric, and for counting connected
-components when measuring results.
+\textbf{From scratch.} Everything a problem asks me to implement is written with
+NumPy array arithmetic: the DFT matrix, all transfer functions and the filtering
+pipeline, the homomorphic filter, the bilateral and Kuwahara filters, the Wiener
+filters and the noise estimators, the motion PSF, the inverse and Wiener
+deconvolution, and the blur estimator. I use \code{numpy.fft} for the transforms
+where the handout allows it. The metrics are my own too: PSNR, SSIM, and the
+connected-component counts in 2.3. SciPy appears only where the handout asks for
+a comparison (\code{scipy.signal.convolve2d} and \code{fftconvolve} in 1.3,
+\code{scipy.ndimage.gaussian\_filter} in 2.2(d)) and in \code{scipy.special.sici},
+which only draws the predicted $\Si$ curve in Fig.~\ref{fig:ringing}.
+scikit-image and \code{scipy.ndimage.label} are only used in the unit tests, to
+check my SSIM and my component labelling. Pillow reads the images and Matplotlib
+draws the figures.
 
-\textbf{Inputs.} The supplied images are used as given: \code{q1.png} (Problem 1),
-the four Problem 2 images, \code{tunnel\_image.jpg} (Problem 3), \code{q4.png}
-(Problem 4) and \code{reference\_image.jpg} (Problems 5 and 6). Preprocessing is
-stated where it is applied. Random noise always comes from
-\code{numpy.random.default\_rng} with the seed given in the relevant section.
+\textbf{Inputs.} The supplied images are used as given: \code{q1.png}
+(Problem 1), the four Problem 2 images, \code{tunnel\_image.jpg} (Problem 3),
+\code{q4.png} (Problem 4) and \code{reference\_image.jpg} (Problems 5 and 6).
+For 5.2 and 6.4 I took my own photos with a phone. Any preprocessing is stated
+where it is applied. Random noise always comes from
+\code{numpy.random.default\_rng} with the seed given in that section.
 
-\textbf{Scope.} The marks table on page~1 of the handout lists a Problem 7 (lens
-distortion), but the handout ends after Problem 6 and contains no Problem 7 text,
-so it is not attempted.
+\textbf{Scope.} The marks table on page 1 of the handout lists a Problem 7 (lens
+distortion), but the handout has no text for it, so I did not attempt it.
 
-\textbf{Reproducing the results.} From the repository root,
-\code{python src/run\_experiments.py} runs everything,
-\code{python src/run\_experiments.py --problem 2} runs one problem, and
-\code{python -m unittest discover -s tests} runs the correctness tests.
+\textbf{Reproducing.} From the repository root:
+\begin{itemize}
+\item \code{python src/run\_experiments.py} runs every problem,
+\item \code{python src/run\_experiments.py -{}-problem 2} runs one problem,
+\item \code{python -m unittest discover -s tests -v} runs the 56 unit tests.
+\end{itemize}
+Each run writes its tables and figures to \code{results/problem\_k/} and its
+terminal output to \code{results/logs/}. The \code{*\_terminal.png} screenshots
+next to the results show those runs.
