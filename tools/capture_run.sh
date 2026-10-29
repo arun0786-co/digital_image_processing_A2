@@ -16,12 +16,17 @@ window_id=$(osascript <<EOF
 tell application "Terminal"
     set previous_id to id of front window
     set run_tab to do script ""
-    set run_window to front window
-    if tty of selected tab of run_window is not tty of run_tab then error "front window is not the new tab"
+    set run_tty to tty of run_tab
+    -- find the new window by its tty: when terminal is not the active app it may not be in front
+    set run_window to missing value
+    repeat with candidate in windows
+        if tty of selected tab of candidate is run_tty then set run_window to contents of candidate
+    end repeat
+    if run_window is missing value then error "could not find the new window"
     set index of (first window whose id is previous_id) to 1
     set bounds of run_window to {40, 40, 1240, 1000}
     delay 0.3
-    do script "cd '$root' && clear && $cmd; tput civis; touch '$marker'" in run_tab
+    do script "cd '$root' && clear && tput civis && $cmd; tput civis; touch '$marker'" in run_tab
     return id of run_window
 end tell
 EOF
