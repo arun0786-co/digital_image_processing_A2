@@ -1,4 +1,4 @@
-problem 6, started 2026-10-29 19:22:20
+problem 6, started 2026-10-30 00:03:16
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -32,7 +32,7 @@ bottom third        84.9    36.6
 left half           89.2    35.5
 right half          90.4    36.0
 
-control: reference_for_blur.jpg, a sharp photo of the same keyboard taken by holding the camera still
+control: reference_for_blur.jpg, a sharp photo of the same laptop keyboard taken by holding the camera still
   strongest negative cepstrum value at theta = 90.1 deg, distance 58.3 (value -0.0361); at the blurred photo's spike position the value is 0.0011
 
 wiener K sweep (mirror padding 2L). noise gain = median, over the 10% flattest 32x32 tiles of the blurred photo, of restored std / blurred std
@@ -60,8 +60,9 @@ no psnr or ssim: the sharp original does not exist
   saved results/problem_6/real_blur.txt
   saved results/problem_6/real_blur_spectrum.png
   saved results/problem_6/real_blur_deblurred.png
+  saved results/problem_6/real_blur_photo.png
   saved results/problem_6/real_blur_regions.png
   saved results/problem_6/real_blur_echo.png
-  done in 6.30 s
+  done in 10.78 s
 
-problem 6 finished in 6.3 s
+problem 6 finished in 10.8 s

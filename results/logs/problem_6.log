@@ -1,4 +1,4 @@
-problem 6, started 2026-10-29 19:22:28
+problem 6, started 2026-10-30 00:03:31
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -27,7 +27,7 @@ samples within half a bin of the line: |p - m/L| < 0.5 / max(rows, cols), p the 
 
   saved results/problem_6/otf_zeros.txt
   saved results/problem_6/psf_otf.png
-  done in 0.90 s
+  done in 1.58 s
 
 == problem 6: inverse_filter
 6.2 naive inverse F = G / H, floor 1e-12 on |H| (values below it take the floor with H's phase)
@@ -42,7 +42,7 @@ error spectrum |F_hat - F| (green channel), mean near the zero lines (|pL - m| <
 
   saved results/problem_6/inverse_filter.txt
   saved results/problem_6/inverse_spectrum.png
-  done in 1.81 s
+  done in 3.31 s
 
 == problem 6: wiener_sweep
 6.3 wiener deconvolution F = conj(H) G / (|H|^2 + K), image in [0, 1], circular model, L = 21, theta = 30
@@ -58,7 +58,7 @@ nsr = 10^(-snr/10) = noise power / mean signal power, the flat-spectrum guess fo
   saved results/problem_6/k_sweep.txt
   saved results/problem_6/k_sweep.png
   saved results/problem_6/deblurred_comparison.png
-  done in 22.43 s
+  done in 37.50 s
 
 == problem 6: real_blur
 6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta
@@ -83,7 +83,7 @@ bottom third        84.9    36.6
 left half           89.2    35.5
 right half          90.4    36.0
 
-control: reference_for_blur.jpg, a sharp photo of the same keyboard taken by holding the camera still
+control: reference_for_blur.jpg, a sharp photo of the same laptop keyboard taken by holding the camera still
   strongest negative cepstrum value at theta = 90.1 deg, distance 58.3 (value -0.0361); at the blurred photo's spike position the value is 0.0011
 
 wiener K sweep (mirror padding 2L). noise gain = median, over the 10% flattest 32x32 tiles of the blurred photo, of restored std / blurred std
@@ -111,8 +111,9 @@ no psnr or ssim: the sharp original does not exist
   saved results/problem_6/real_blur.txt
   saved results/problem_6/real_blur_spectrum.png
   saved results/problem_6/real_blur_deblurred.png
+  saved results/problem_6/real_blur_photo.png
   saved results/problem_6/real_blur_regions.png
   saved results/problem_6/real_blur_echo.png
-  done in 5.96 s
+  done in 9.46 s
 
-problem 6 finished in 31.1 s
+problem 6 finished in 51.9 s

@@ -1,4 +1,4 @@
-problem 6, started 2026-10-29 18:59:38
+problem 6, started 2026-10-30 00:02:26
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -22,6 +22,6 @@ error spectrum |F_hat - F| (green channel), mean near the zero lines (|pL - m| <
 
   saved results/problem_6/inverse_filter.txt
   saved results/problem_6/inverse_spectrum.png
-  done in 2.14 s
+  done in 3.86 s
 
-problem 6 finished in 2.1 s
+problem 6 finished in 3.9 s

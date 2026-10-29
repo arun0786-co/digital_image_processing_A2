@@ -1,4 +1,4 @@
-problem 6, started 2026-10-29 18:59:34
+problem 6, started 2026-10-30 00:02:20
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -27,6 +27,6 @@ samples within half a bin of the line: |p - m/L| < 0.5 / max(rows, cols), p the 
 
   saved results/problem_6/otf_zeros.txt
   saved results/problem_6/psf_otf.png
-  done in 0.88 s
+  done in 1.57 s
 
-problem 6 finished in 0.9 s
+problem 6 finished in 1.6 s
