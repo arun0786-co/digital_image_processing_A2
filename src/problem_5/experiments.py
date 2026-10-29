@@ -8,7 +8,7 @@ from common.freq import pad_image
 from common.io_utils import downsample, load_rgb, luminance, normalise_for_display
 from common.metrics import SSIM_NOTE, evaluate, psnr
 from common.paths import find_photo, input_path, results_dir
-from common.plotting import FIGSIZE, save_figure, write_table
+from common.plotting import FIGSIZE, panel_grid, save_figure, write_table
 from problem_2.filters import make_filter
 from problem_4.bilateral import bilateral
 from problem_5.wiener import (estimate_noise_sigma, flat_region_sigma, noise_tiles, oracle_wiener,
@@ -147,13 +147,14 @@ def denoising_table(out):
               ("wiener radial", wiener_denoise(noisy, sigma / 255.0, "radial")[0]),
               ("gaussian LPF (oracle)", tuned_lowpass("gaussian", sigma)[1]),
               ("bilateral (oracle)", tuned_bilateral(sigma)[2])]
-    fig, axes = plt.subplots(len(CROPS), len(panels), figsize=(3.4 * len(panels), 2.0 * len(CROPS)))
-    for row, (crop_name, rows_, cols_) in enumerate(CROPS):
-        for column, (name, image) in enumerate(panels):
-            axes[row, column].imshow(np.clip(image[rows_, cols_], 0, 1))
-            axes[row, column].set_title(f"{name}: {crop_name}", fontsize=8)
-            axes[row, column].axis("off")
-    save_figure(fig, out / "denoising_crops.png")
+    # one figure per crop, two to a row
+    for crop_name, rows_, cols_ in CROPS:
+        fig, axes = panel_grid(len(panels), width=3.7, height=2.2)
+        for ax, (name, image) in zip(axes, panels):
+            ax.imshow(np.clip(image[rows_, cols_], 0, 1))
+            ax.set_title(f"{name}: {crop_name}", fontsize=10)
+            ax.axis("off")
+        save_figure(fig, out / f"denoising_crops_{crop_name.replace(' ', '_')}.png")
 
 
 def radial_profile(transfer):
@@ -162,7 +163,7 @@ def radial_profile(transfer):
 
 
 def wiener_gain_plot(out):
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    fig, axes = plt.subplots(2, 1, figsize=(8.5, 8.6))
     marks = [0.05, 0.1, 0.2, 0.3, 0.4]
     lines = ["5.1 radial wiener gain (green channel) at selected radial frequencies",
              "each value is the mean gain over 0.01 cycles/pixel around the frequency", "",
@@ -190,7 +191,7 @@ def wiener_gain_plot(out):
         ax.set_xlabel("radial frequency (cycles/pixel)")
         ax.set_ylabel("gain")
         ax.grid(True, which="both", alpha=0.25)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=9)
     save_figure(fig, out / "wiener_gain.png")
 
 
@@ -224,14 +225,15 @@ def misspecification(out):
                      f"{band_rmse(clean, result, edge):11.3f}{gain.mean():11.4f}")
     write_table(out / "misspecification.txt", lines)
 
-    fig, axes = plt.subplots(2, len(MISSPEC_SCALES) + 1, figsize=(3.6 * (len(MISSPEC_SCALES) + 1), 4.6))
-    for row, (crop_name, rows_, cols_) in enumerate(CROPS[:2]):
-        axes[row, 0].imshow(np.clip(noisy[rows_, cols_], 0, 1))
-        axes[row, 0].set_title(f"noisy: {crop_name}", fontsize=8)
-        for column, scale in enumerate(MISSPEC_SCALES, start=1):
-            axes[row, column].imshow(np.clip(results[scale][rows_, cols_], 0, 1))
-            axes[row, column].set_title(f"assumed {scale:g} S_nn", fontsize=8)
-    for ax in axes.ravel():
+    # two to a row: the noisy crop and the three assumptions, for each of two crops
+    panels = []
+    for crop_name, rows_, cols_ in CROPS[:2]:
+        panels.append((noisy[rows_, cols_], f"{crop_name}: noisy"))
+        panels += [(results[scale][rows_, cols_], f"{crop_name}: assumed {scale:g} S_nn") for scale in MISSPEC_SCALES]
+    fig, axes = panel_grid(len(panels), width=3.7, height=2.2)
+    for ax, (data, title) in zip(axes, panels):
+        ax.imshow(np.clip(data, 0, 1))
+        ax.set_title(title, fontsize=10)
         ax.axis("off")
     save_figure(fig, out / "misspecification.png")
 
@@ -416,24 +418,25 @@ def real_noise(out):
     write_table(out / "real_noise.txt", lines)
 
     crop = (slice(crop_rows // 2 - 128, crop_rows // 2 + 128), slice(crop_cols // 2 - 192, crop_cols // 2 + 192))
-    fig, axes = plt.subplots(2, 4, figsize=(19, 7.6))
-    for row, (name, noisy, outputs, residual) in enumerate(
-            [("real photo", image, real_out, real_residual), ("synthetic white noise", synthetic, simulated_out,
-                                                              simulated_residual)]):
-        axes[row, 0].imshow(np.clip(noisy[crop], 0, 1))
-        axes[row, 0].set_title(f"{name} (crop)", fontsize=10)
-        for col, key in ((1, "fine"), (2, "flat")):
+    # one figure for the photo and one for the synthetic case, two to a row
+    for name, file_name, noisy, outputs, residual in [
+            ("real photo", "real_noise.png", image, real_out, real_residual),
+            ("synthetic white noise", "real_noise_synthetic.png", synthetic, simulated_out, simulated_residual)]:
+        fig, axes = panel_grid(4, width=3.7, height=2.8)
+        axes[0].imshow(np.clip(noisy[crop], 0, 1))
+        axes[0].set_title(f"{name} (crop)", fontsize=10)
+        for ax, key in ((axes[1], "fine"), (axes[2], "flat")):
             sigma, filtered, change = outputs[key]
-            axes[row, col].imshow(np.clip(filtered[crop], 0, 1))
+            ax.imshow(np.clip(filtered[crop], 0, 1))
             label = "immerkaer" if key == "fine" else "flat-tile"
-            axes[row, col].set_title(f"wiener, {label} sigma {sigma * 255:.1f} (rms change {change:.1f})", fontsize=10)
-        axes[row, 3].imshow(normalise_for_display(residual[crop], 0.5, 99.5), cmap="gray")
-        axes[row, 3].set_title("residual, input - flat-tile wiener", fontsize=10)
-    for ax in axes.ravel():
-        ax.axis("off")
-    save_figure(fig, out / "real_noise.png")
+            ax.set_title(f"wiener, {label} sigma {sigma * 255:.1f}, rms change {change:.1f}", fontsize=10)
+        axes[3].imshow(normalise_for_display(residual[crop], 0.5, 99.5), cmap="gray")
+        axes[3].set_title("residual, input - flat-tile wiener", fontsize=10)
+        for ax in axes:
+            ax.axis("off")
+        save_figure(fig, out / file_name)
 
-    fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
+    fig, axes = plt.subplots(3, 1, figsize=(8, 10.8))
     for name, stats, style in (("real photo", real, "o-"), ("white noise control", control, "s--")):
         frequency, spectrum = stats["spectrum"]
         axes[0].semilogy(frequency, spectrum, style, ms=3, label=name)
@@ -444,17 +447,17 @@ def real_noise(out):
     axes[0].axhline(1, color="grey", lw=0.8)
     axes[0].set_xlabel("radial frequency (cycles/pixel)")
     axes[0].set_ylabel("noise power (1 = white, same variance)")
-    axes[0].set_title("noise spectrum of the flattest tiles", fontsize=10)
+    axes[0].set_title("noise spectrum of the flattest tiles", fontsize=11)
     axes[1].set_ylim(bottom=0)
     axes[1].set_xlabel("tile mean luminance (8-bit)")
     axes[1].set_ylabel("noise std (8-bit)")
-    axes[1].set_title("noise level against brightness", fontsize=10)
+    axes[1].set_title("noise level against brightness", fontsize=11)
     axes[2].set_xlabel("offset of the pixel pair in the 8 x 8 grid (7 = block border)")
     axes[2].set_ylabel("mean |step| / its average")
-    axes[2].set_title("jpeg block grid", fontsize=10)
+    axes[2].set_title("jpeg block grid", fontsize=11)
     for ax in axes:
         ax.grid(True, alpha=0.25)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=9)
     save_figure(fig, out / "real_noise_stats.png")
 
 
