@@ -1,17 +1,17 @@
-problem 6, started 2026-10-23 21:06:29
+problem 6, started 2026-10-29 18:59:42
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
 == problem 6: wiener_sweep
 6.3 wiener deconvolution F = conj(H) G / (|H|^2 + K), image in [0, 1], circular model, L = 21, theta = 30
-K swept over 36 log-spaced values from 1e-07 to 1e+00; psnr and ssim on outputs clipped to [0, 1], data range 1; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+K swept over 36 log-spaced values from 1e-07 to 1e+00; psnr and ssim on outputs clipped to [0, 1], data range 1; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 nsr = 10^(-snr/10) = noise power / mean signal power, the flat-spectrum guess for K
 
  snr dB    best K       nsr  psnr dB    ssim  psnr K=1e-7  psnr K=1
@@ -23,6 +23,6 @@ nsr = 10^(-snr/10) = noise power / mean signal power, the flat-spectrum guess fo
   saved results/problem_6/k_sweep.txt
   saved results/problem_6/k_sweep.png
   saved results/problem_6/deblurred_comparison.png
-  done in 21.60 s
+  done in 23.09 s
 
-problem 6 finished in 21.6 s
+problem 6 finished in 23.1 s

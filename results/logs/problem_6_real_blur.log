@@ -1,11 +1,11 @@
-problem 6, started 2026-10-23 21:06:53
+problem 6, started 2026-10-29 19:22:20
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -19,10 +19,49 @@ blurred, snr 40 dB                30.4      21.5
 blurred, snr 30 dB                30.3      21.5
 blurred, snr 20 dB                30.6      21.6
 
-BLOCKED: no photo found in photos/ whose name starts with 'blur'.
-the case study needs a genuinely motion-blurred photo taken by the student.
+photo: blur1.jpg, 4032x1816 after exif rotation, box-downsampled x3 to 1344x605; 0.143% of full-size pixels have a channel at 254 or 255
+estimated theta = 90.0 deg, L = 35.7 px at this scale (107.2 px at full size)
+stripe spacing in the spectrum 1 / L = 0.0280 cycles/pixel
+cepstrum at the spike: -0.0363
+
+the same estimate on parts of the photo (a single PSF assumes these agree):
+region             theta       L
+top third           96.4    36.6
+middle third        90.2    35.6
+bottom third        84.9    36.6
+left half           89.2    35.5
+right half          90.4    36.0
+
+control: reference_for_blur.jpg, a sharp photo of the same keyboard taken by holding the camera still
+  strongest negative cepstrum value at theta = 90.1 deg, distance 58.3 (value -0.0361); at the blurred photo's spike position the value is 0.0011
+
+wiener K sweep (mirror padding 2L). noise gain = median, over the 10% flattest 32x32 tiles of the blurred photo, of restored std / blurred std
+       K  noise gain  outside [0, 1]     min     max
+   1e-04       33.04          30.65%   -4.96   10.10
+   3e-04       20.19          23.23%   -4.03    8.36
+   1e-03       11.00          18.10%   -2.95    6.23
+   3e-03        5.98          15.41%   -1.99    4.45
+   1e-02        2.89          12.14%   -1.13    3.05
+   3e-02        1.41           8.92%   -0.65    2.12
+   1e-01        0.62           5.95%   -0.29    1.36
+rule: the smallest K whose noise gain is at most 2: chosen K = 0.03
+at K = 0.03: 94.3% of the values outside [0, 1] are below 0, and 72.7% of those are where the blurred photo is below 0.1; 1.8% of the pixels with a value outside [0, 1] lie within L, along the motion, of a pixel that is clipped at full size
+
+echo = rms of the row profile 14 to 94 rows below the strongest bright-to-dark edge in the bottom third (central half of the columns, straight line removed)
+image                          edge row    step  blurred   K = 0.01   K = 0.03    K = 0.1  echo/step  dark band  bright band   (last three at K = 0.03; band positions in rows below the edge)
+real photo                         1141   0.191   0.0057     0.0348     0.0302     0.0204      0.159         24           40
+control (exact blur)               1160   0.038   0.0047     0.0157     0.0128     0.0094      0.336         18           38
+control noise: white, sigma = 1.21 (8-bit), the blurred photo's flat-tile level
+
+each third restored with its own estimated psf instead of the global one (K = 0.03):
+echo below row 1141: global psf 0.0302, bottom-third psf 0.0311
+no psnr or ssim: the sharp original does not exist
 
   saved results/problem_6/real_blur.txt
-  done in 0.56 s
+  saved results/problem_6/real_blur_spectrum.png
+  saved results/problem_6/real_blur_deblurred.png
+  saved results/problem_6/real_blur_regions.png
+  saved results/problem_6/real_blur_echo.png
+  done in 6.30 s
 
-problem 6 finished in 0.6 s
+problem 6 finished in 6.3 s

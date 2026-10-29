@@ -1,11 +1,11 @@
-problem 1, started 2026-10-23 20:51:11
+problem 1, started 2026-10-29 19:01:11
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -14,12 +14,12 @@ pillow      12.3.0 (image io only)
 complex128, unnormalised forward transform, times are medians
 
 input                 max|F_custom-F_np|   max|F_np|   relative  max|idft2(F)-f|  t_custom s   t_fft2 s
-q1.png 512x512                 8.153e-09   3.383e+07   2.41e-16        6.452e-12      0.0131    0.00203
-q1 crop 256x384                4.564e-09   1.375e+07   3.32e-16        9.265e-12      0.0044    0.00058
+q1.png 512x512                 8.153e-09   3.383e+07   2.41e-16        6.452e-12      0.0135    0.00224
+q1 crop 256x384                4.564e-09   1.375e+07   3.32e-16        9.265e-12      0.0044    0.00062
 normal noise 64x48             1.208e-13   1.464e+02   8.25e-16        3.109e-15      0.0001    0.00002
 
   saved results/problem_1/dft_error_table.txt
-  done in 0.15 s
+  done in 0.16 s
 
 == problem 1: conjugate_symmetry
 1.1a conjugate symmetry F(u, v) = conj F(-u, -v) for the real test image
@@ -32,7 +32,7 @@ real degrees of freedom: 2*131070 pair values + 4 real = 262144 = M N
 
   saved results/problem_1/conjugate_symmetry.txt
   saved results/problem_1/conjugate_symmetry.png
-  done in 0.15 s
+  done in 0.17 s
 
 == problem 1: shift_theorem
 1.1b shift theorem: f(x - x0, y - y0) <-> F(u, v) exp(-j 2 pi (u x0 + v y0) / N)
@@ -88,7 +88,7 @@ random 7x7 kernel, spectrum samples
 (-200, 17)     -5.036941e+03+9.049523e+03j   -5.036941e+03+9.049523e+03j
 
   saved results/problem_1/convolution_theorem_table.txt
-  done in 0.17 s
+  done in 0.18 s
 
 == problem 1: sinusoid_recovery
 1.1c synthetic image ground truth, 256x256
@@ -123,7 +123,7 @@ pair (40.25, 41.75): separation 1.50 cycles/image, main peaks in the 16x zero-pa
   saved results/problem_1/sinusoid_recovery.txt
   saved results/problem_1/sinusoid_recovery.png
   saved results/problem_1/resolution_limit.png
-  done in 0.18 s
+  done in 0.20 s
 
 == problem 1: phase_magnitude
 1.2 phase / magnitude reconstructions of q1.png (custom dft2 / idft2)
@@ -157,7 +157,7 @@ zero-phase image r0 = idft2(|F|) (1.2b)
   saved results/problem_1/phase_magnitude.txt
   saved results/problem_1/phase_magnitude.png
   saved results/problem_1/phase_magnitude_zoom.png
-  done in 0.68 s
+  done in 0.75 s
 
 == problem 1: wraparound
 1.3a circular (unpadded) vs zero-padded linear convolution, 5x5 laplacian on q1.png
@@ -181,7 +181,7 @@ max |circular - linear| = 130.023, corrupted pixels = 29820 (band of 15 px: 2982
 
   saved results/problem_1/wraparound_table.txt
   saved results/problem_1/wraparound.png
-  done in 0.83 s
+  done in 0.88 s
 
 == problem 1: padding_cost
 1.3b cost of zero padding, N = 512, M = 5, numpy.fft complex pipeline
@@ -189,16 +189,16 @@ time: median of 41 interleaved runs of fft2(image), fft2(kernel), product, ifft2
 memory: tracemalloc peak of the same pipeline
 
 grid                         P     prime factors  (P/N)^2  P^2logP ratio   time ms  time ratio  peak MiB  mem ratio
-N (circular)               512               2^9   1.0000         1.0000     7.055       1.000     16.00      1.000
-N + M - 1                  516          2^2*3*43   1.0157         1.0170     9.485       1.344     16.25      1.016
-next_fast_len real         540         2^2*3^3*5   1.1124         1.1219     6.240       0.884     17.80      1.112
-next_fast_len complex      525           3*5^2*7   1.0514         1.0557     5.701       0.808     16.83      1.051
-2N (problem 2 rule)       1024              2^10   4.0000         4.4444    32.912       4.665     64.00      4.000
+N (circular)               512               2^9   1.0000         1.0000     7.592       1.000     16.00      1.000
+N + M - 1                  516          2^2*3*43   1.0157         1.0170     9.811       1.292     16.25      1.016
+next_fast_len real         540         2^2*3^3*5   1.1124         1.1219     6.472       0.852     17.80      1.112
+next_fast_len complex      525           3*5^2*7   1.0514         1.0557     5.932       0.781     16.83      1.051
+2N (problem 2 rule)       1024              2^10   4.0000         4.4444    36.503       4.808     64.00      4.000
 
-scipy.signal.fftconvolve(mode='same') on the same input: 3.051 ms
+scipy.signal.fftconvolve(mode='same') on the same input: 3.229 ms
 it pads each axis to next_fast_len(516, real=True) = 540 and uses rfftn
 
   saved results/problem_1/padding_cost.txt
-  done in 2.80 s
+  done in 3.01 s
 
-problem 1 finished in 5.0 s
+problem 1 finished in 5.4 s

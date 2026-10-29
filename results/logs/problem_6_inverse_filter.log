@@ -1,11 +1,11 @@
-problem 6, started 2026-10-23 21:06:24
+problem 6, started 2026-10-29 18:59:38
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -22,6 +22,6 @@ error spectrum |F_hat - F| (green channel), mean near the zero lines (|pL - m| <
 
   saved results/problem_6/inverse_filter.txt
   saved results/problem_6/inverse_spectrum.png
-  done in 1.93 s
+  done in 2.14 s
 
-problem 6 finished in 1.9 s
+problem 6 finished in 2.1 s

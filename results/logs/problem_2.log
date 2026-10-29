@@ -1,17 +1,17 @@
-problem 2, started 2026-10-23 20:51:45
+problem 2, started 2026-10-29 18:41:34
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
 == problem 2: transfer_functions
   saved results/problem_2/transfer_functions.png
-  done in 0.18 s
+  done in 0.19 s
 
 == problem 2: cutoff_semantics
 2.1a low-pass value at D = D0 = 40, P = 1024
@@ -50,7 +50,7 @@ alpha at fixed radii
 
   saved results/problem_2/power_retention.txt
   saved results/problem_2/power_retention.png
-  done in 0.36 s
+  done in 0.38 s
 
 == problem 2: inverse_design
 2.1c butterworth inverse design
@@ -102,7 +102,7 @@ near the top-left corner: maximum of g inside the quadrant rows/cols 128..255
   saved results/problem_2/ideal_ringing_table.txt
   saved results/problem_2/ideal_ringing_profiles.png
   saved results/problem_2/ideal_ringing_corner.png
-  done in 0.43 s
+  done in 0.49 s
 
 == problem 2: butterworth_orders
 2.2b step image, D0 = 40, P = 1024, profile row 255
@@ -123,13 +123,13 @@ ideal-filter limit predicted for n -> infinity: 8.9490 %
 
   saved results/problem_2/butterworth_order_table.txt
   saved results/problem_2/butterworth_orders.png
-  done in 0.47 s
+  done in 0.53 s
 
 == problem 2: filter_grid
   saved results/problem_2/filter_grid.png
   saved results/problem_2/filter_grid_insets.png
   saved results/problem_2/filter_grid_profile.png
-  done in 1.94 s
+  done in 2.10 s
 
 == problem 2: gaussian_equivalence
 2.2d frequency-domain GLPF vs scipy.ndimage.gaussian_filter, characters pattern, P = 1376
@@ -141,7 +141,7 @@ sigma_s = P / (2 pi D0); scipy with mode='constant' (zero boundary, like the pad
   160      1.3687   9.66e-05    1.861e-02    3.306e-03     1.618e-04         3.306e-03
 
   saved results/problem_2/gaussian_equivalence.txt
-  done in 0.32 s
+  done in 0.37 s
 
 == problem 2: psnr_sweep
 2.3a cameraman + gaussian noise sigma = 20.0, seed 2026, not clipped before filtering
@@ -158,7 +158,7 @@ GLPF (matched D0')                150   28.517           215   29.558      20.32
   saved results/problem_2/psnr_sweep.txt
   saved results/problem_2/psnr_sweep.png
   saved results/problem_2/psnr_sweep_best.png
-  done in 12.13 s
+  done in 13.45 s
 
 == problem 2: text_repair
 2.3b gaussian low-pass on text_gaps (444x508), P = 1016
@@ -194,7 +194,7 @@ ideal LPF at that radius: join 0.977, contrast 0.407, pieces 83, range [37.9, 31
 
   saved results/problem_2/text_repair.txt
   saved results/problem_2/text_repair.png
-  done in 1.81 s
+  done in 1.79 s
 
 == problem 2: highpass
 2.3c high-pass on thumb_print (962x1026), P = 2052, common half-amplitude radius 50
@@ -212,6 +212,6 @@ output mean = 72.913, std = 40.455 (input std 40.427)
   saved results/problem_2/highpass.txt
   saved results/problem_2/highpass.png
   saved results/problem_2/ridge_maps_zoom.png
-  done in 1.56 s
+  done in 2.02 s
 
-problem 2 finished in 19.2 s
+problem 2 finished in 21.3 s

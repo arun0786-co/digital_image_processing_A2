@@ -1,11 +1,11 @@
-problem 4, started 2026-10-23 20:53:49
+problem 4, started 2026-10-29 18:42:26
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -21,11 +21,11 @@ flat field 256x256, value 128, gaussian noise sigma 20.0, seed 11; sigma_r found
      11             0.02956     2.50    57.862              0.02956    0.02778
 
   saved results/problem_4/matching.txt
-  done in 1.91 s
+  done in 1.95 s
 
 == problem 4: comparison
 4.1b q4.png + gaussian noise sigma 20.0, seed 2026; matched pairs from matching.txt
-psnr and ssim against the clean image, outputs clipped to [0, 255], data range 255; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+psnr and ssim against the clean image, outputs clipped to [0, 255], data range 255; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 
 method                                    psnr dB    ssim  edge-band rmse
 noisy input                                22.265  0.1674          19.506
@@ -40,7 +40,7 @@ edge band: pixels within 3 px of a ground-truth jump larger than 5.0
 
   saved results/problem_4/edge_preserving_table.txt
   saved results/problem_4/edge_preservation_comparison.png
-  done in 0.79 s
+  done in 0.77 s
 
 == problem 4: blockiness
 4.2b blockiness of classical vs soft kuwahara, noise sigma 20.0, seed 2026
@@ -56,7 +56,7 @@ clean image on the same pixels: tv 0.017, p99 |grad| 1.000
 
   saved results/problem_4/blockiness.txt
   saved results/problem_4/blockiness.png
-  done in 0.28 s
+  done in 0.30 s
 
 == problem 4: complexity
 4.2c per-pixel operation counts (adds/subs/compares, multiplies/divides, exponentials)
@@ -65,27 +65,27 @@ soft kuwahara adds 4 subs (minus min variance), 4 divides by T, 4 exp, 3 adds (w
 bilateral per window tap: 1 sub, 1 square, 1 scale, 1 exp, 1 mult by the spatial weight, 1 mult by the value, 2 adds; plus 1 divide per pixel
 
  window                            filter  add/sub/cmp  mult/div   exp  runtime s
-      5         kuwahara, integral images           35        13     0     0.0131
+      5         kuwahara, integral images           35        13     0     0.0148
       5             kuwahara, direct sums           71        48     0          -
-      5    soft kuwahara, integral images           45        22     4     0.0153
-      5                         bilateral           75       101    25     0.0343
-      7         kuwahara, integral images           35        13     0     0.0131
+      5    soft kuwahara, integral images           45        22     4     0.0151
+      5                         bilateral           75       101    25     0.0355
+      7         kuwahara, integral images           35        13     0     0.0143
       7             kuwahara, direct sums          127        76     0          -
-      7    soft kuwahara, integral images           45        22     4     0.0138
-      7                         bilateral          147       197    49     0.0702
-     11         kuwahara, integral images           35        13     0     0.0127
+      7    soft kuwahara, integral images           45        22     4     0.0153
+      7                         bilateral          147       197    49     0.0644
+     11         kuwahara, integral images           35        13     0     0.0152
      11             kuwahara, direct sums          287       156     0          -
-     11    soft kuwahara, integral images           45        22     4     0.0139
-     11                         bilateral          363       485   121     0.1740
-     15         kuwahara, integral images           35        13     0     0.0124
+     11    soft kuwahara, integral images           45        22     4     0.0151
+     11                         bilateral          363       485   121     0.1595
+     15         kuwahara, integral images           35        13     0     0.0135
      15             kuwahara, direct sums          511       268     0          -
-     15    soft kuwahara, integral images           45        22     4     0.0139
-     15                         bilateral          675       901   225     0.3052
+     15    soft kuwahara, integral images           45        22     4     0.0144
+     15                         bilateral          675       901   225     0.3037
 
 runtimes: median of 3 runs on the 512x512 noisy q4 image
 
   saved results/problem_4/complexity.txt
-  done in 2.06 s
+  done in 2.09 s
 
 == problem 4: ncr_breakdown
 4.3 bilateral breakdown on synthetic steps 256x128, I1 = 100.0, I2 = 150.0, |dI| = 50.0
@@ -133,6 +133,6 @@ rho = 1/2 at NCR = 1 / sqrt(2 ln 2 (k^2 + 2)), k = sigma_r / sigma = 2.0: 0.3467
   saved results/problem_4/ncr_breakdown.txt
   saved results/problem_4/ncr_breakdown.png
   saved results/problem_4/ncr_examples.png
-  done in 5.20 s
+  done in 7.15 s
 
-problem 4 finished in 10.2 s
+problem 4 finished in 12.3 s

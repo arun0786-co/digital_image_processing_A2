@@ -1,18 +1,18 @@
-problem 5, started 2026-10-23 21:13:25
+problem 5, started 2026-10-29 18:55:05
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
 == problem 5: denoising_table
 5.1 reference_image.jpg, box-averaged 2x2 to 1024x1536 rgb, scaled to [0, 1]
 noise: clean + (sigma / 255) z, one z ~ N(0, 1) (seed 2026) shared by every method and sigma; the noisy input is not clipped
-metrics on outputs clipped to [0, 1], data range 1.0; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+metrics on outputs clipped to [0, 1], data range 1.0; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 all frequency-domain filters mirror-pad to P = 3072 x 3072
 wiener S_nn = known injected variance; S_ff = smoothed noisy periodogram - S_nn, floored at 0
 oracle = a parameter or spectrum taken from the clean reference
@@ -54,6 +54,6 @@ bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 
 
   saved results/problem_5/denoising_table.txt
   saved results/problem_5/denoising_crops.png
-  done in 202.29 s
+  done in 200.74 s
 
-problem 5 finished in 202.3 s
+problem 5 finished in 200.7 s

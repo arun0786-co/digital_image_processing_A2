@@ -1,11 +1,11 @@
-problem 5, started 2026-10-23 21:00:42
+problem 5, started 2026-10-29 19:05:12
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -21,6 +21,6 @@ band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
 
   saved results/problem_5/misspecification.txt
   saved results/problem_5/misspecification.png
-  done in 5.33 s
+  done in 5.81 s
 
-problem 5 finished in 5.3 s
+problem 5 finished in 5.8 s

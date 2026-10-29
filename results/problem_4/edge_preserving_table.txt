@@ -1,5 +1,5 @@
 4.1b q4.png + gaussian noise sigma 20.0, seed 2026; matched pairs from matching.txt
-psnr and ssim against the clean image, outputs clipped to [0, 255], data range 255; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+psnr and ssim against the clean image, outputs clipped to [0, 255], data range 255; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 
 method                                    psnr dB    ssim  edge-band rmse
 noisy input                                22.265  0.1674          19.506

@@ -1,11 +1,11 @@
-problem 4, started 2026-10-23 20:54:02
+problem 4, started 2026-10-29 18:41:58
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -21,6 +21,6 @@ flat field 256x256, value 128, gaussian noise sigma 20.0, seed 11; sigma_r found
      11             0.02956     2.50    57.862              0.02956    0.02778
 
   saved results/problem_4/matching.txt
-  done in 1.92 s
+  done in 2.01 s
 
-problem 4 finished in 1.9 s
+problem 4 finished in 2.0 s

@@ -1,6 +1,6 @@
 5.1 reference_image.jpg, box-averaged 2x2 to 1024x1536 rgb, scaled to [0, 1]
 noise: clean + (sigma / 255) z, one z ~ N(0, 1) (seed 2026) shared by every method and sigma; the noisy input is not clipped
-metrics on outputs clipped to [0, 1], data range 1.0; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+metrics on outputs clipped to [0, 1], data range 1.0; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 all frequency-domain filters mirror-pad to P = 3072 x 3072
 wiener S_nn = known injected variance; S_ff = smoothed noisy periodogram - S_nn, floored at 0
 oracle = a parameter or spectrum taken from the clean reference

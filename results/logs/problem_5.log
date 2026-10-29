@@ -1,18 +1,18 @@
-problem 5, started 2026-10-23 21:22:36
+problem 5, started 2026-10-29 18:47:29
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
 == problem 5: denoising_table
 5.1 reference_image.jpg, box-averaged 2x2 to 1024x1536 rgb, scaled to [0, 1]
 noise: clean + (sigma / 255) z, one z ~ N(0, 1) (seed 2026) shared by every method and sigma; the noisy input is not clipped
-metrics on outputs clipped to [0, 1], data range 1.0; ssim: skimage.metrics.structural_similarity, 7x7 uniform window, K1 = 0.01, K2 = 0.03, colour images averaged over channels
+metrics on outputs clipped to [0, 1], data range 1.0; ssim: own numpy ssim (wang et al. 2004), 7x7 uniform window, sample covariance, K1 = 0.01, K2 = 0.03, colour images averaged over channels
 all frequency-domain filters mirror-pad to P = 3072 x 3072
 wiener S_nn = known injected variance; S_ff = smoothed noisy periodogram - S_nn, floored at 0
 oracle = a parameter or spectrum taken from the clean reference
@@ -54,7 +54,7 @@ bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 
 
   saved results/problem_5/denoising_table.txt
   saved results/problem_5/denoising_crops.png
-  done in 194.40 s
+  done in 202.66 s
 
 == problem 5: wiener_gain
 5.1 radial wiener gain (green channel) at selected radial frequencies
@@ -68,7 +68,7 @@ each value is the mean gain over 0.01 cycles/pixel around the frequency
 
   saved results/problem_5/wiener_gain.txt
   saved results/problem_5/wiener_gain.png
-  done in 6.47 s
+  done in 7.24 s
 
 == problem 5: misspecification
 5.2 wiener at sigma = 20 with assumed noise power scale * S_nn (radial S_ff estimate)
@@ -82,7 +82,7 @@ band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
 
   saved results/problem_5/misspecification.txt
   saved results/problem_5/misspecification.png
-  done in 5.84 s
+  done in 6.02 s
 
 == problem 5: edge_blur
 5.2 where the error sits, sigma = 20; rmse in 8-bit levels
@@ -104,7 +104,7 @@ roof-line peak in the profile (row 425, column 1180), luminance:
 
   saved results/problem_5/edge_blur.txt
   saved results/problem_5/edge_profile.png
-  done in 3.52 s
+  done in 4.18 s
 
 == problem 5: real_noise
 5.2c noise estimate check on the synthetic images (immerkaer 1996, per channel, averaged)
@@ -115,10 +115,55 @@ roof-line peak in the profile (row 425, column 1180), luminance:
              40           40.125
       clean ref            2.540   (texture floor of the method on this image)
 
-BLOCKED: no photo found in photos/ whose name starts with 'noisy'.
-the real-noise case study needs a genuinely noisy photo taken by the student.
+photo: noisy.jpg, 4032x1816 after exif rotation, centre crop 1024x1536 at full resolution (rows 1504-2528, columns 140-1676)
+
+real photo
+  sigma, immerkaer (fine scale, assumes white noise), r/g/b: 1.83, 1.83, 1.83
+  sigma, flat tiles (64x64, plane removed, 10% quantile of 384 tiles), r/g/b: 4.84, 4.79, 4.82
+  flat / immerkaer = 2.64
+  noise spectrum of the 39 flattest tiles (luminance, 1 = white):
+    0.03-0.10 cycles/pixel: 4.81
+    0.10-0.20 cycles/pixel: 2.67
+    0.20-0.30 cycles/pixel: 2.42
+    0.30-0.40 cycles/pixel: 0.69
+    0.40-0.51 cycles/pixel: 0.20
+  noise correlation between channels in the flat tiles: r-g 0.990, r-b 0.991, g-b 0.992
+  noise std per channel (8-bit, 10 % quantile in each brightness fifth) by tile brightness: 47: 4.75, 53: 4.70, 55: 4.92, 71: 7.22, 82: 6.44
+  mean |horizontal step| by column offset in the 8x8 grid: 4.72 4.34 4.49 4.58 4.49 4.36 4.81 6.05
+  mean |vertical step| by row offset in the 8x8 grid:      4.53 4.21 4.61 4.26 4.59 4.22 4.60 6.09
+  block-border step / other steps: horizontal 1.333, vertical 1.374; even / odd offsets (0-6): horizontal 1.045, vertical 1.083
+
+synthetic: clean reference + white noise, sigma = 4.82 (the photo's flat-tile value)
+  sigma, immerkaer, r/g/b: 5.64, 5.84, 5.72
+  sigma, flat tiles, r/g/b: 5.47, 5.24, 4.99
+  flat / immerkaer = 0.91
+
+control: the same white noise field alone (tiles grouped by the clean image's brightness)
+  sigma, immerkaer (fine scale, assumes white noise), r/g/b: 4.81, 4.82, 4.81
+  sigma, flat tiles (64x64, plane removed, 10% quantile of 384 tiles), r/g/b: 4.75, 4.75, 4.75
+  flat / immerkaer = 0.99
+  noise spectrum of the 39 flattest tiles (luminance, 1 = white):
+    0.03-0.10 cycles/pixel: 1.00
+    0.10-0.20 cycles/pixel: 1.02
+    0.20-0.30 cycles/pixel: 0.97
+    0.30-0.40 cycles/pixel: 1.02
+    0.40-0.51 cycles/pixel: 1.00
+  noise correlation between channels in the flat tiles: r-g -0.016, r-b -0.005, g-b -0.007
+  noise std per channel (8-bit, 10 % quantile in each brightness fifth) by tile brightness: 41: 4.75, 53: 4.74, 70: 4.75, 110: 4.75, 239: 4.75
+  mean |horizontal step| by column offset in the 8x8 grid: 3.63 3.64 3.63 3.64 3.63 3.64 3.63 3.63
+  mean |vertical step| by row offset in the 8x8 grid:      3.64 3.65 3.63 3.63 3.64 3.63 3.63 3.64
+  block-border step / other steps: horizontal 0.998, vertical 1.000; even / odd offsets (0-6): horizontal 0.998, vertical 1.000
+
+white-noise radial wiener filter with each sigma estimate (rms change of the image, 8-bit):
+  real photo  fine  sigma  1.83: rms change 1.05
+  real photo  flat  sigma  4.82: rms change 2.79
+  synthetic   fine  sigma  5.73: rms change 3.98
+  synthetic   flat  sigma  5.24: rms change 3.42
+no psnr or ssim: there is no clean, registered reference for this photo
 
   saved results/problem_5/real_noise.txt
-  done in 0.24 s
+  saved results/problem_5/real_noise.png
+  saved results/problem_5/real_noise_stats.png
+  done in 8.54 s
 
-problem 5 finished in 210.5 s
+problem 5 finished in 228.6 s

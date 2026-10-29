@@ -1,11 +1,11 @@
-problem 1, started 2026-10-23 20:51:32
+problem 1, started 2026-10-29 19:00:58
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -41,6 +41,6 @@ zero-phase image r0 = idft2(|F|) (1.2b)
   saved results/problem_1/phase_magnitude.txt
   saved results/problem_1/phase_magnitude.png
   saved results/problem_1/phase_magnitude_zoom.png
-  done in 0.72 s
+  done in 0.77 s
 
-problem 1 finished in 0.7 s
+problem 1 finished in 0.8 s

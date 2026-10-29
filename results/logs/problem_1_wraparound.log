@@ -1,11 +1,11 @@
-problem 1, started 2026-10-23 20:51:35
+problem 1, started 2026-10-29 19:01:02
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -31,6 +31,6 @@ max |circular - linear| = 130.023, corrupted pixels = 29820 (band of 15 px: 2982
 
   saved results/problem_1/wraparound_table.txt
   saved results/problem_1/wraparound.png
-  done in 0.84 s
+  done in 1.05 s
 
-problem 1 finished in 0.8 s
+problem 1 finished in 1.1 s

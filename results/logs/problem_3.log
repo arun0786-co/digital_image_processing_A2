@@ -1,11 +1,11 @@
-problem 3, started 2026-10-23 20:52:52
+problem 3, started 2026-10-29 19:02:31
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
 python      3.11.9
 numpy       2.4.6
-scipy       1.17.1 (checks only)
-skimage     0.26.0 (ssim metric and checks only)
+scipy       1.17.1 (comparisons the handout asks for, sine integral for a plot)
+skimage     0.26.0 (unit-test checks only)
 matplotlib  3.11.1
 pillow      12.3.0 (image io only)
 
@@ -25,7 +25,7 @@ homomorphic prediction: output ~ L^gL R^gH, so the ratio becomes (input ratio)^g
 
   saved results/problem_3/log_domain_check.txt
   saved results/problem_3/log_domain_check.png
-  done in 0.37 s
+  done in 0.41 s
 
 == problem 3: sweep
   saved results/problem_3/sweep_grid_d0_10.png
@@ -72,7 +72,7 @@ good setting  (D0, gL, gH) = (160, 0.5, 2.0)
 strongest halo (D0, gL, gH) = (40, 0.25, 2.0)
 
   saved results/problem_3/sweep_metrics.txt
-  done in 10.90 s
+  done in 10.66 s
 
 == problem 3: comparison
 3.2 homomorphic vs global histogram equalisation (assignment 1 equalise), settings (D0, gL, gH)
@@ -90,6 +90,6 @@ source check: 98.3 % of the full-resolution bright-region pixels have a channel 
   saved results/problem_3/homomorphic_comparison.png
   saved results/problem_3/profiles.png
   saved results/problem_3/histograms.png
-  done in 12.13 s
+  done in 13.15 s
 
-problem 3 finished in 23.4 s
+problem 3 finished in 24.2 s
