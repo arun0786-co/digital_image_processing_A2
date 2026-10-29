@@ -3,11 +3,12 @@ from functools import cache
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Rectangle
 
 from common.io_utils import downsample, load_rgb, luminance, normalise_for_display
 from common.metrics import SSIM_NOTE, evaluate, psnr
 from common.paths import find_photo, results_dir
-from common.plotting import FIGSIZE, save_figure, write_table
+from common.plotting import FIGSIZE, panel_grid, save_figure, write_table
 from problem_5.experiments import reference
 from problem_5.wiener import flat_region_sigma, noise_tiles
 from problem_6.motion import (apply_otf, continuous_otf, estimate_blur, frequency_grid, motion_psf,
@@ -99,7 +100,10 @@ def psf_otf(out):
                      f"{np.median(np.abs(transfer)[near]):12.2e}{abs(np.sinc(m + 0.5)):21.4f}")
     write_table(out / "otf_zeros.txt", lines)
 
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    # the two images side by side, the otf profile across the full width below
+    fig = plt.figure(figsize=(9, 9))
+    grid = fig.add_gridspec(2, 2, height_ratios=[1.2, 1])
+    axes = [fig.add_subplot(grid[0, 0]), fig.add_subplot(grid[0, 1]), fig.add_subplot(grid[1, :])]
     axes[0].imshow(psf, cmap="gray", interpolation="nearest")
     axes[0].set_title(f"P6.1 psf, L = {MOTION_LENGTH}, theta = {MOTION_ANGLE:g} deg", fontsize=10)
     axes[0].axis("off")
@@ -113,7 +117,7 @@ def psf_otf(out):
     axes[1].set_ylim(-0.3, 0.3)
     axes[1].set_xlabel("fx (cycles/pixel)")
     axes[1].set_ylabel("fy (cycles/pixel)")
-    axes[1].set_title("log |H|; red (left half): samples nearest the predicted zeros", fontsize=10)
+    axes[1].set_title("log |H|, red (left half): samples nearest the zeros", fontsize=10)
     order = np.argsort(p.ravel())
     on_axis = np.abs(fx * -np.sin(np.deg2rad(MOTION_ANGLE)) + fy * np.cos(np.deg2rad(MOTION_ANGLE))).ravel()[order] < 1.5 / max(shape)
     pp = p.ravel()[order][on_axis]
@@ -123,9 +127,9 @@ def psf_otf(out):
     axes[2].set_yscale("log")
     axes[2].set_ylim(1e-4, 1.5)
     axes[2].set_xlabel("p = fx cos + fy sin (cycles/pixel)")
-    axes[2].set_title("P6.1 otf along the motion direction", fontsize=10)
+    axes[2].set_title("P6.1 otf along the motion direction", fontsize=11)
     axes[2].grid(True, alpha=0.25)
-    axes[2].legend(fontsize=8)
+    axes[2].legend(fontsize=9)
     save_figure(fig, out / "psf_otf.png")
 
 
@@ -159,7 +163,10 @@ def inverse_filter(out):
     estimate, spectrum = naive_inverse(noisy, transfer, INVERSE_FLOOR)
     g_log = np.fft.fftshift(np.log(np.abs(np.fft.fft2(luminance(noisy))) + 1e-12))
     f_log = np.fft.fftshift(np.log(np.abs(luminance(spectrum)) + 1e-12))
-    fig, axes = plt.subplots(1, 3, figsize=(17, 5.4))
+    # the two spectra side by side, the output below
+    fig = plt.figure(figsize=(10, 9))
+    grid = fig.add_gridspec(2, 2)
+    axes = [fig.add_subplot(grid[0, 0]), fig.add_subplot(grid[0, 1]), fig.add_subplot(grid[1, :])]
     for ax, data, title in [(axes[0], g_log, f"log |G|, snr {SHOW_SNR} dB"),
                             (axes[1], f_log, "log |G / H| before any clipping")]:
         shown = ax.imshow(data, cmap="magma", extent=(-0.5, 0.5, -0.5, 0.5))
@@ -172,10 +179,11 @@ def inverse_filter(out):
         ax.set_ylim(-0.25, 0.25)
         ax.set_xlabel("fx (cycles/pixel)")
         ax.set_ylabel("fy (cycles/pixel)")
-        ax.set_title(f"P6.2 {title}; cyan (left half): samples nearest m/L", fontsize=9)
+        ax.set_title(f"P6.2 {title}", fontsize=10)
     axes[2].imshow(normalise_for_display(luminance(estimate), 1, 99), cmap="gray")
-    axes[2].set_title("naive inverse output (luminance, 1-99 % stretch)", fontsize=9)
+    axes[2].set_title("naive inverse output (luminance, 1-99 % stretch)", fontsize=10)
     axes[2].axis("off")
+    fig.suptitle("cyan, in the left half of each spectrum: the samples nearest the zero lines m/L", fontsize=10)
     save_figure(fig, out / "inverse_spectrum.png")
 
 
@@ -217,10 +225,10 @@ def wiener_sweep(out):
               ("K = 1e-6 (too small)", wiener_deconvolve(noisy, transfer, 1e-6)),
               (f"K = {best:.1e} (best psnr)", wiener_deconvolve(noisy, transfer, best)),
               ("K = 1e-1 (too large)", wiener_deconvolve(noisy, transfer, 1e-1))]
-    fig, axes = plt.subplots(1, len(panels), figsize=(3.6 * len(panels), 3.0))
+    fig, axes = panel_grid(len(panels), width=3.7, height=2.8)
     for ax, (name, image) in zip(axes, panels):
         ax.imshow(np.clip(image[CROP], 0, 1))
-        ax.set_title(name, fontsize=9)
+        ax.set_title(name, fontsize=10)
         ax.axis("off")
     save_figure(fig, out / "deblurred_comparison.png")
 
@@ -435,8 +443,9 @@ def real_blur(out):
     write_table(out / "real_blur.txt", lines)
 
     spectrum = np.fft.fftshift(np.log(np.abs(np.fft.fft2(grey * np.outer(np.hanning(rows), np.hanning(cols)))) + 1e-8))
-    panels = 3 if sharp is not None else 2
-    fig, axes = plt.subplots(1, panels, figsize=(6.5 * panels, 6))
+    cepstra = [("blurred photo", ceps)] + ([("sharp control photo", sharp_ceps)] if sharp is not None else [])
+    # the spectrum centred on top, the cepstra side by side below
+    fig, axes = panel_grid(1 + len(cepstra), width=4.6, height=4.5, rows=[1, len(cepstra)])
     axes[0].imshow(spectrum, cmap="gray", extent=(-0.5, 0.5, -0.5, 0.5))
     theta = np.deg2rad(angle)
     for m in range(1, 6):
@@ -450,7 +459,6 @@ def real_blur(out):
     axes[0].set_xlabel("fx (cycles/pixel)")
     axes[0].set_ylabel("fy (cycles/pixel)")
     axes[0].set_title(f"log |G| with lines at m / L, L = {length:.1f}, theta = {angle:.1f} deg", fontsize=10)
-    cepstra = [("blurred photo", ceps)] + ([("sharp control photo", sharp_ceps)] if sharp is not None else [])
     for ax, (name, values) in zip(axes[1:], cepstra):
         c_rows, c_cols = values.shape
         view = values[c_rows // 2 - 60:c_rows // 2 + 61, c_cols // 2 - 60:c_cols // 2 + 61]
@@ -460,43 +468,58 @@ def real_blur(out):
                 "o", mfc="none", color="tab:red", ms=14)
         ax.set_xlabel("x (pixels)")
         ax.set_ylabel("y (pixels)")
-        ax.set_title(f"cepstrum of the {name}, circles at +-L along theta", fontsize=10)
+        ax.set_title(f"cepstrum, {name} (circles at +-L)", fontsize=10)
     save_figure(fig, out / "real_blur_spectrum.png")
 
     index = REAL_K_SWEEP.index(chosen)
     shown = REAL_K_SWEEP[max(index - 1, 0):index + 2]
     crop = (slice(rows // 2 - 192, rows // 2 + 192), slice(cols // 2 - 256, cols // 2 + 256))
-    fig, axes = plt.subplots(1, 1 + len(shown), figsize=(4.4 * (1 + len(shown)), 3.8))
+    fig, axes = panel_grid(1 + len(shown), width=3.7, height=3.0)
     axes[0].imshow(np.clip(image[crop], 0, 1))
-    axes[0].set_title("real blurred photo (centre crop)", fontsize=9)
+    axes[0].set_title("real blurred photo (centre crop)", fontsize=10)
     for ax, k in zip(axes[1:], shown):
         ax.imshow(np.clip(results[k][0][crop], 0, 1))
         ax.set_title(f"wiener K = {k:g}, noise gain {results[k][1]:.2f}" + (" (chosen)" if k == chosen else ""),
-                     fontsize=9)
+                     fontsize=10)
     for ax in axes:
         ax.axis("off")
     save_figure(fig, out / "real_blur_deblurred.png")
 
     third = rows // 3
     band = slice(max(cols // 2 - 175, 0), min(cols // 2 + 175, cols))
-    fig, axes = plt.subplots(3, 3, figsize=(15, 13.5))
-    for col, name in enumerate(["top third", "middle third", "bottom third"]):
-        centre = third * col + third // 2
-        part = (slice(centre - 100, centre + 100), band)
+    parts = {name: (slice(third * i + third // 2 - 100, third * i + third // 2 + 100), band)
+             for i, name in enumerate(["top third", "middle third", "bottom third"])}
+
+    # the whole photo with the three parts boxed, next to the sharp control photo
+    photos = [(image, "blurred photo, the three parts boxed")]
+    photos += [(sharp_rgb, "sharp control photo")] if sharp is not None else []
+    fig, axes = panel_grid(len(photos), width=3.3, height=7.0)
+    for ax, (data, title) in zip(axes, photos):
+        ax.imshow(np.clip(data, 0, 1))
+        ax.set_title(title, fontsize=10)
+        ax.axis("off")
+    for name, (rows_, cols_) in parts.items():
+        axes[0].add_patch(Rectangle((cols_.start, rows_.start), cols_.stop - cols_.start, rows_.stop - rows_.start,
+                                    fill=False, ec="tab:red", lw=1))
+        axes[0].text(cols_.start, rows_.start - 10, f"{name}: theta {regional[name][0]:.1f}, L {regional[name][1]:.1f}",
+                     color="tab:red", fontsize=8, bbox=dict(facecolor="white", alpha=0.8, lw=0, pad=1))
+    save_figure(fig, out / "real_blur_photo.png")
+
+    # one row per part: the global psf next to the part's own psf
+    fig, axes = plt.subplots(3, 2, figsize=(7.6, 7.6))
+    for row, (name, part) in enumerate(parts.items()):
         local_angle, local_length = regional[name]
-        axes[0, col].imshow(np.clip(image[part], 0, 1))
-        axes[0, col].set_title(f"{name}, blurred: local theta {local_angle:.1f}, L {local_length:.1f}", fontsize=10)
-        axes[1, col].imshow(np.clip(restored[part], 0, 1))
-        axes[1, col].set_title(f"{name}, one PSF (theta {angle:.1f}, L {length:.1f}), K = {chosen:g}", fontsize=10)
-        axes[2, col].imshow(np.clip(local[name][part], 0, 1))
-        axes[2, col].set_title(f"{name}, own PSF (theta {local_angle:.1f}, L {local_length:.1f}), K = {chosen:g}",
-                               fontsize=10)
+        axes[row, 0].imshow(np.clip(restored[part], 0, 1))
+        axes[row, 0].set_title(f"{name}, one PSF (theta {angle:.1f}, L {length:.1f})", fontsize=10)
+        axes[row, 1].imshow(np.clip(local[name][part], 0, 1))
+        axes[row, 1].set_title(f"{name}, own PSF (theta {local_angle:.1f}, L {local_length:.1f})", fontsize=10)
     for ax in axes.ravel():
         ax.axis("off")
+    fig.suptitle(f"P6.4 each part restored with K = {chosen:g}", fontsize=11)
     save_figure(fig, out / "real_blur_regions.png")
 
     if sharp is not None:
-        fig, axes = plt.subplots(1, 4, figsize=(18, 4.6))
+        fig, axes = panel_grid(4, width=3.7, height=2.8)
         panels = [(image, edge, "real photo, blurred"), (restored, edge, f"real photo, restored (K = {chosen:g})"),
                   (control, control_edge, "control: sharp photo + exact blur + noise"),
                   (control_out[chosen], control_edge, f"control, restored (K = {chosen:g})")]
