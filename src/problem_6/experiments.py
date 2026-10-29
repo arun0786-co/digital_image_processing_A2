@@ -9,6 +9,7 @@ from common.metrics import SSIM_NOTE, evaluate, psnr
 from common.paths import find_photo, results_dir
 from common.plotting import FIGSIZE, save_figure, write_table
 from problem_5.experiments import reference
+from problem_5.wiener import noise_tiles
 from problem_6.motion import (apply_otf, continuous_otf, estimate_blur, frequency_grid, motion_psf,
                               naive_inverse, otf, wiener_deconvolve)
 
@@ -21,8 +22,10 @@ K_VALUES = np.logspace(-7, 0, 36)
 ZERO_ORDERS = [1, 2, 3, 4, 5]
 SHOW_SNR = 30
 REAL_LONG_SIDE = 1536
-REAL_K_VALUES = [3e-3, 1e-2, 3e-2]
-REAL_K = 1e-2
+REAL_K_SWEEP = [1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1]
+REAL_NOISE_GAIN = 2.0
+REAL_TILE = 32
+REAL_FLAT_SHARE = 0.1
 CROP = (slice(400, 656), slice(1056, 1440))
 
 
@@ -226,6 +229,46 @@ def cepstrum_check(lines, image_rows):
         lines.append(f"{name:28s}{angle:10.1f}{length:10.1f}")
 
 
+def prepare_photo(path):
+    """box-downsample so the long side is at most REAL_LONG_SIDE, returning (rgb, factor)."""
+    rgb = load_rgb(path)
+    factor = max(1, int(np.ceil(max(rgb.shape[:2]) / REAL_LONG_SIDE)))
+    return downsample(rgb, factor), factor, rgb
+
+
+def windowed_estimate(grey):
+    """cepstrum estimate on the hann-windowed image; the window removes the cross that
+    the image border would otherwise put in the spectrum."""
+    rows, cols = grey.shape
+    return estimate_blur(grey * np.outer(np.hanning(rows), np.hanning(cols)))
+
+
+def cepstrum_at(ceps, angle, length):
+    """cepstrum value at distance length along angle from the centre."""
+    theta = np.deg2rad(angle)
+    row = ceps.shape[0] // 2 - int(round(length * np.sin(theta)))
+    col = ceps.shape[1] // 2 + int(round(length * np.cos(theta)))
+    return float(ceps[row, col])
+
+
+def deblur(image, length, angle, k):
+    """wiener deconvolution after mirror padding by 2L, since a real blur is not circular."""
+    pad = int(2 * np.ceil(length))
+    padded = np.pad(image, ((pad, pad), (pad, pad), (0, 0)), mode="symmetric")
+    transfer = otf(motion_psf(length, angle), padded.shape[:2])
+    return wiener_deconvolve(padded, transfer, k)[pad:-pad, pad:-pad]
+
+
+def noise_gain(blurred, restored):
+    """how much the deconvolution raises the plane-free std in the flattest tiles of
+    the blurred photo (median ratio over those tiles)."""
+    _, before = noise_tiles(blurred, REAL_TILE)
+    _, after = noise_tiles(restored, REAL_TILE)
+    before, after = luminance(before).std(axis=(1, 2)), luminance(after).std(axis=(1, 2))
+    flat = before <= np.quantile(before, REAL_FLAT_SHARE)
+    return float(np.median(after[flat] / before[flat]))
+
+
 def real_blur(out):
     lines = ["6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta",
              "leaves a negative spike at distance about L along the motion direction",
@@ -240,29 +283,55 @@ def real_blur(out):
         write_table(out / "real_blur.txt", lines)
         return
 
-    rgb = load_rgb(photo)
-    factor = max(1, int(np.ceil(max(rgb.shape[:2]) / REAL_LONG_SIDE)))
-    image = downsample(rgb, factor)
+    image, factor, full = prepare_photo(photo)
     grey = luminance(image)
     rows, cols = grey.shape
-    window = np.outer(np.hanning(rows), np.hanning(cols))
-    angle, length, ceps = estimate_blur(grey * window)
-    psf = motion_psf(length, angle)
-    pad = int(2 * np.ceil(length))
-    padded = np.pad(image, ((pad, pad), (pad, pad), (0, 0)), mode="symmetric")
-    transfer = otf(psf, padded.shape[:2])
-    results = {k: wiener_deconvolve(padded, transfer, k)[pad:-pad, pad:-pad] for k in REAL_K_VALUES}
-
-    lines += ["", f"photo: {photo.name}, {rgb.shape[0]}x{rgb.shape[1]}, box-downsampled x{factor} to {rows}x{cols}",
-              "estimate on the hann-windowed luminance (the window suppresses the border cross in the spectrum)",
+    angle, length, ceps = windowed_estimate(grey)
+    clipped = float(np.mean(full.max(axis=2) >= 254 / 255))
+    lines += ["", f"photo: {photo.name}, {full.shape[0]}x{full.shape[1]} after exif rotation, box-downsampled "
+                  f"x{factor} to {rows}x{cols}; {clipped:.3%} of full-size pixels have a channel at 254 or 255",
               f"estimated theta = {angle:.1f} deg, L = {length:.1f} px at this scale ({length * factor:.1f} px at full size)",
               f"stripe spacing in the spectrum 1 / L = {1 / length:.4f} cycles/pixel",
-              f"deconvolution: mirror padding of {pad} px, wiener K in {REAL_K_VALUES}, chosen K = {REAL_K}",
+              f"cepstrum at the spike: {cepstrum_at(ceps, angle, length):.4f}", "",
+              "the same estimate on parts of the photo (a single PSF assumes these agree):",
+              f"{'region':16s}{'theta':>8s}{'L':>8s}"]
+    regions = {"top third": (slice(0, rows // 3), slice(None)),
+               "middle third": (slice(rows // 3, 2 * rows // 3), slice(None)),
+               "bottom third": (slice(2 * rows // 3, rows), slice(None)),
+               "left half": (slice(None), slice(0, cols // 2)),
+               "right half": (slice(None), slice(cols // 2, cols))}
+    regional = {}
+    for name, region in regions.items():
+        regional[name] = windowed_estimate(grey[region])[:2]
+        lines.append(f"{name:16s}{regional[name][0]:8.1f}{regional[name][1]:8.1f}")
+
+    sharp = find_photo("reference_for_blur")
+    if sharp is not None:
+        sharp_grey = luminance(prepare_photo(sharp)[0])
+        sharp_angle, sharp_length, sharp_ceps = windowed_estimate(sharp_grey)
+        lines += ["", f"control: {sharp.name}, a sharp photo of the same keyboard taken by holding the camera still",
+                  f"  strongest negative cepstrum value at theta = {sharp_angle:.1f} deg, distance {sharp_length:.1f} "
+                  f"(value {sharp_ceps.min():.4f}); at the blurred photo's spike position the value is "
+                  f"{cepstrum_at(sharp_ceps, angle, length):.4f}"]
+
+    lines += ["", f"wiener K sweep (mirror padding 2L). noise gain = median, over the {REAL_FLAT_SHARE:.0%} flattest "
+                  f"{REAL_TILE}x{REAL_TILE} tiles of the blurred photo, of restored std / blurred std",
+              f"{'K':>8s}{'noise gain':>12s}{'outside [0, 1]':>16s}{'min':>8s}{'max':>8s}"]
+    results = {}
+    for k in REAL_K_SWEEP:
+        restored = deblur(image, length, angle, k)
+        gain = noise_gain(image, restored)
+        outside = np.mean((restored < 0) | (restored > 1))
+        lines.append(f"{k:8.0e}{gain:12.2f}{outside:16.2%}{restored.min():8.2f}{restored.max():8.2f}")
+        results[k] = (restored, gain)
+    chosen = min(k for k in REAL_K_SWEEP if results[k][1] <= REAL_NOISE_GAIN)
+    lines += [f"rule: the smallest K whose noise gain is at most {REAL_NOISE_GAIN:g}: chosen K = {chosen:g}",
               "no psnr or ssim: the sharp original does not exist"]
     write_table(out / "real_blur.txt", lines)
 
-    spectrum = np.fft.fftshift(np.log(np.abs(np.fft.fft2(grey * window)) + 1e-8))
-    fig, axes = plt.subplots(1, 2, figsize=(13, 6))
+    spectrum = np.fft.fftshift(np.log(np.abs(np.fft.fft2(grey * np.outer(np.hanning(rows), np.hanning(cols)))) + 1e-8))
+    panels = 3 if sharp is not None else 2
+    fig, axes = plt.subplots(1, panels, figsize=(6.5 * panels, 6))
     axes[0].imshow(spectrum, cmap="gray", extent=(-0.5, 0.5, -0.5, 0.5))
     theta = np.deg2rad(angle)
     for m in range(1, 6):
@@ -273,25 +342,51 @@ def real_blur(out):
             axes[0].plot(ends[:, 0], ends[:, 1], color="tab:red", lw=0.6)
     axes[0].set_xlim(-0.25, 0.25)
     axes[0].set_ylim(-0.25, 0.25)
-    axes[0].set_title(f"log |G| with lines at m / L, L = {length:.1f}, theta = {angle:.1f} deg", fontsize=9)
-    c_rows, c_cols = ceps.shape
-    view = ceps[c_rows // 2 - 60:c_rows // 2 + 61, c_cols // 2 - 60:c_cols // 2 + 61]
-    axes[1].imshow(view, cmap="gray", extent=(-60.5, 60.5, -60.5, 60.5), vmin=np.percentile(view, 1),
-                   vmax=np.percentile(view, 99))
-    axes[1].set_title("cepstrum near the origin (dark spikes at +-L along the motion)", fontsize=9)
+    axes[0].set_xlabel("fx (cycles/pixel)")
+    axes[0].set_ylabel("fy (cycles/pixel)")
+    axes[0].set_title(f"log |G| with lines at m / L, L = {length:.1f}, theta = {angle:.1f} deg", fontsize=10)
+    cepstra = [("blurred photo", ceps)] + ([("sharp control photo", sharp_ceps)] if sharp is not None else [])
+    for ax, (name, values) in zip(axes[1:], cepstra):
+        c_rows, c_cols = values.shape
+        view = values[c_rows // 2 - 60:c_rows // 2 + 61, c_cols // 2 - 60:c_cols // 2 + 61]
+        ax.imshow(view, cmap="gray", extent=(-60.5, 60.5, -60.5, 60.5), vmin=np.percentile(view, 1),
+                  vmax=np.percentile(view, 99))
+        ax.plot([length * np.cos(theta), -length * np.cos(theta)], [length * np.sin(theta), -length * np.sin(theta)],
+                "o", mfc="none", color="tab:red", ms=14)
+        ax.set_xlabel("x (pixels)")
+        ax.set_ylabel("y (pixels)")
+        ax.set_title(f"cepstrum of the {name}, circles at +-L along theta", fontsize=10)
     save_figure(fig, out / "real_blur_spectrum.png")
 
+    index = REAL_K_SWEEP.index(chosen)
+    shown = REAL_K_SWEEP[max(index - 1, 0):index + 2]
     crop = (slice(rows // 2 - 192, rows // 2 + 192), slice(cols // 2 - 256, cols // 2 + 256))
-    fig, axes = plt.subplots(1, 1 + len(REAL_K_VALUES), figsize=(4.4 * (1 + len(REAL_K_VALUES)), 3.8))
+    fig, axes = plt.subplots(1, 1 + len(shown), figsize=(4.4 * (1 + len(shown)), 3.8))
     axes[0].imshow(np.clip(image[crop], 0, 1))
-    axes[0].set_title("real blurred photo (crop)", fontsize=9)
-    for ax, k in zip(axes[1:], REAL_K_VALUES):
-        ax.imshow(np.clip(results[k][crop], 0, 1))
-        ax.set_title(f"wiener K = {k:g}" + (" (chosen)" if k == REAL_K else ""), fontsize=9)
+    axes[0].set_title("real blurred photo (centre crop)", fontsize=9)
+    for ax, k in zip(axes[1:], shown):
+        ax.imshow(np.clip(results[k][0][crop], 0, 1))
+        ax.set_title(f"wiener K = {k:g}, noise gain {results[k][1]:.2f}" + (" (chosen)" if k == chosen else ""),
+                     fontsize=9)
     for ax in axes:
         ax.axis("off")
     save_figure(fig, out / "real_blur_deblurred.png")
 
+    restored = results[chosen][0]
+    third = rows // 3
+    band = slice(max(cols // 2 - 175, 0), min(cols // 2 + 175, cols))
+    fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+    for col, name in enumerate(["top third", "middle third", "bottom third"]):
+        centre = third * col + third // 2
+        part = (slice(centre - 100, centre + 100), band)
+        axes[0, col].imshow(np.clip(image[part], 0, 1))
+        axes[0, col].set_title(f"{name}, blurred: local theta {regional[name][0]:.1f}, L {regional[name][1]:.1f}",
+                               fontsize=10)
+        axes[1, col].imshow(np.clip(restored[part], 0, 1))
+        axes[1, col].set_title(f"{name}, one PSF (theta {angle:.1f}, L {length:.1f}), K = {chosen:g}", fontsize=10)
+    for ax in axes.ravel():
+        ax.axis("off")
+    save_figure(fig, out / "real_blur_regions.png")
 
 EXPERIMENTS = {
     "psf_otf": psf_otf,
