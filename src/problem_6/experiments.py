@@ -9,7 +9,7 @@ from common.metrics import SSIM_NOTE, evaluate, psnr
 from common.paths import find_photo, results_dir
 from common.plotting import FIGSIZE, save_figure, write_table
 from problem_5.experiments import reference
-from problem_5.wiener import noise_tiles
+from problem_5.wiener import flat_region_sigma, noise_tiles
 from problem_6.motion import (apply_otf, continuous_otf, estimate_blur, frequency_grid, motion_psf,
                               naive_inverse, otf, wiener_deconvolve)
 
@@ -26,6 +26,8 @@ REAL_K_SWEEP = [1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1]
 REAL_NOISE_GAIN = 2.0
 REAL_TILE = 32
 REAL_FLAT_SHARE = 0.1
+REAL_ECHO_K = [1e-2, 3e-2, 1e-1]
+REAL_ECHO_ROWS = (14, 94)
 CROP = (slice(400, 656), slice(1056, 1440))
 
 
@@ -281,6 +283,40 @@ def near_motion(mask, length, angle):
     return near
 
 
+def strongest_falling_edge(grey, first_row):
+    """row of the largest bright-to-dark step, going down, in the profile of the central
+    half of the columns, searched from first_row to the bottom."""
+    cols = grey.shape[1]
+    profile = grey[first_row:, cols // 4:3 * cols // 4].mean(axis=1)
+    return first_row + int(np.argmin(np.diff(profile)))
+
+
+def edge_step(grey, edge):
+    """height of a horizontal edge: mean level 10 to 30 rows above it minus 20 to 40 below."""
+    columns = slice(grey.shape[1] // 4, 3 * grey.shape[1] // 4)
+    return float(grey[edge - 30:edge - 10, columns].mean() - grey[edge + 20:edge + 40, columns].mean())
+
+
+def echo_below(grey, edge):
+    """rms of the row profile REAL_ECHO_ROWS below a horizontal edge (central half of the
+    columns, straight line removed). with a vertical motion, bands that repeat along the
+    motion show up here."""
+    columns = slice(grey.shape[1] // 4, 3 * grey.shape[1] // 4)
+    profile = grey[edge + REAL_ECHO_ROWS[0]:edge + REAL_ECHO_ROWS[1], columns].mean(axis=1)
+    t = np.arange(len(profile))
+    return float((profile - np.polyval(np.polyfit(t, profile, 1), t)).std())
+
+
+def exact_model_control(sharp, image, length, angle):
+    """the sharp control photo blurred with the estimated psf plus white noise at the
+    blurred photo's flat-tile level: a case where the blur model holds exactly."""
+    sigma = float(flat_region_sigma(noise_tiles(image, REAL_TILE)[1], REAL_FLAT_SHARE).mean())
+    pad = int(2 * np.ceil(length))
+    padded = np.pad(sharp, ((pad, pad), (pad, pad), (0, 0)), mode="symmetric")
+    blurred = apply_otf(padded, otf(motion_psf(length, angle), padded.shape[:2]))[pad:-pad, pad:-pad]
+    return blurred + sigma * np.random.default_rng(NOISE_SEED).standard_normal(blurred.shape), sigma
+
+
 def real_blur(out):
     lines = ["6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta",
              "leaves a negative spike at distance about L along the motion direction",
@@ -319,7 +355,8 @@ def real_blur(out):
 
     sharp = find_photo("reference_for_blur")
     if sharp is not None:
-        sharp_grey = luminance(prepare_photo(sharp)[0])
+        sharp_rgb = prepare_photo(sharp)[0]
+        sharp_grey = luminance(sharp_rgb)
         sharp_angle, sharp_length, sharp_ceps = windowed_estimate(sharp_grey)
         lines += ["", f"control: {sharp.name}, a sharp photo of the same keyboard taken by holding the camera still",
                   f"  strongest negative cepstrum value at theta = {sharp_angle:.1f} deg, distance {sharp_length:.1f} "
@@ -348,7 +385,38 @@ def real_blur(out):
               f"at K = {chosen:g}: {below.sum() / outside.sum():.1%} of the values outside [0, 1] are below 0, and "
               f"{below[image < 0.1].sum() / below.sum():.1%} of those are where the blurred photo is below 0.1; "
               f"{(outside_pixels & near_clipping).sum() / outside_pixels.sum():.1%} of the pixels with a value outside "
-              "[0, 1] lie within L, along the motion, of a pixel that is clipped at full size",
+              "[0, 1] lie within L, along the motion, of a pixel that is clipped at full size"]
+
+    # bands about L apart next to the strongest edge: measured on the photo and on a control
+    # where the model holds exactly, scaled by the edge height so the two can be compared
+    lines += ["", f"echo = rms of the row profile {REAL_ECHO_ROWS[0]} to {REAL_ECHO_ROWS[1]} rows below the strongest "
+                  "bright-to-dark edge in the bottom third (central half of the columns, straight line removed)",
+              f"{'image':30s}{'edge row':>9s}{'step':>8s}{'blurred':>9s}"
+              + "".join(f"{'K = ' + format(k, 'g'):>11s}" for k in REAL_ECHO_K) + f"{'echo/step at K = ' + format(chosen, 'g'):>22s}"]
+    edge = strongest_falling_edge(grey, 2 * rows // 3)
+    cases = [("real photo", grey, edge, {k: luminance(results[k][0]) for k in REAL_ECHO_K})]
+    if sharp is not None:
+        control, sigma = exact_model_control(sharp_rgb, image, length, angle)
+        control_grey = luminance(control)
+        control_edge = strongest_falling_edge(control_grey, 2 * rows // 3)
+        control_out = {k: deblur(control, length, angle, k) for k in REAL_ECHO_K}
+        cases.append(("control (exact blur)", control_grey, control_edge,
+                      {k: luminance(v) for k, v in control_out.items()}))
+    for name, before, at, restored_by_k in cases:
+        step = edge_step(before, at)
+        lines.append(f"{name:30s}{at:9d}{step:8.3f}{echo_below(before, at):9.4f}"
+                     + "".join(f"{echo_below(restored_by_k[k], at):11.4f}" for k in REAL_ECHO_K)
+                     + f"{echo_below(restored_by_k[chosen], at) / step:22.3f}")
+    if sharp is not None:
+        lines.append(f"control noise: white, sigma = {sigma * 255:.2f} (8-bit), the blurred photo's flat-tile level")
+
+    lines += ["", f"each third restored with its own estimated psf instead of the global one (K = {chosen:g}):"]
+    local = {}
+    for name in ("top third", "middle third", "bottom third"):
+        local_angle, local_length = regional[name]
+        local[name] = deblur(image, local_length, local_angle, chosen)
+    lines += [f"echo below row {edge}: global psf {echo_below(luminance(results[chosen][0]), edge):.4f}, "
+              f"bottom-third psf {echo_below(luminance(local['bottom third']), edge):.4f}",
               "no psnr or ssim: the sharp original does not exist"]
     write_table(out / "real_blur.txt", lines)
 
@@ -397,18 +465,34 @@ def real_blur(out):
 
     third = rows // 3
     band = slice(max(cols // 2 - 175, 0), min(cols // 2 + 175, cols))
-    fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+    fig, axes = plt.subplots(3, 3, figsize=(15, 13.5))
     for col, name in enumerate(["top third", "middle third", "bottom third"]):
         centre = third * col + third // 2
         part = (slice(centre - 100, centre + 100), band)
+        local_angle, local_length = regional[name]
         axes[0, col].imshow(np.clip(image[part], 0, 1))
-        axes[0, col].set_title(f"{name}, blurred: local theta {regional[name][0]:.1f}, L {regional[name][1]:.1f}",
-                               fontsize=10)
+        axes[0, col].set_title(f"{name}, blurred: local theta {local_angle:.1f}, L {local_length:.1f}", fontsize=10)
         axes[1, col].imshow(np.clip(restored[part], 0, 1))
         axes[1, col].set_title(f"{name}, one PSF (theta {angle:.1f}, L {length:.1f}), K = {chosen:g}", fontsize=10)
+        axes[2, col].imshow(np.clip(local[name][part], 0, 1))
+        axes[2, col].set_title(f"{name}, own PSF (theta {local_angle:.1f}, L {local_length:.1f}), K = {chosen:g}",
+                               fontsize=10)
     for ax in axes.ravel():
         ax.axis("off")
     save_figure(fig, out / "real_blur_regions.png")
+
+    if sharp is not None:
+        fig, axes = plt.subplots(1, 4, figsize=(18, 4.6))
+        panels = [(image, edge, "real photo, blurred"), (restored, edge, f"real photo, restored (K = {chosen:g})"),
+                  (control, control_edge, "control: sharp photo + exact blur + noise"),
+                  (control_out[chosen], control_edge, f"control, restored (K = {chosen:g})")]
+        for ax, (data, at, title) in zip(axes, panels):
+            ax.imshow(np.clip(data[at - 100:at + 100, cols // 4:3 * cols // 4], 0, 1))
+            ax.axhline(100, color="tab:red", lw=0.6)
+            ax.set_title(title, fontsize=10)
+            ax.axis("off")
+        save_figure(fig, out / "real_blur_echo.png")
+
 
 EXPERIMENTS = {
     "psf_otf": psf_otf,
