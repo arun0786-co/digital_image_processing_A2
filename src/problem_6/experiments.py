@@ -269,6 +269,18 @@ def noise_gain(blurred, restored):
     return float(np.median(after[flat] / before[flat]))
 
 
+def near_motion(mask, length, angle):
+    """pixels within `length` of a true pixel of mask, measured along the motion direction."""
+    footprint = motion_psf(2 * length, angle) > 0
+    centre = footprint.shape[0] // 2
+    padded = np.pad(mask, centre)
+    rows, cols = mask.shape
+    near = np.zeros_like(mask)
+    for dr, dc in zip(*np.nonzero(footprint)):
+        near |= padded[dr:dr + rows, dc:dc + cols]
+    return near
+
+
 def real_blur(out):
     lines = ["6.4 blur estimate from the cepstrum ift{log|G|}: a motion blur of length L at angle theta",
              "leaves a negative spike at distance about L along the motion direction",
@@ -325,7 +337,18 @@ def real_blur(out):
         lines.append(f"{k:8.0e}{gain:12.2f}{outside:16.2%}{restored.min():8.2f}{restored.max():8.2f}")
         results[k] = (restored, gain)
     chosen = min(k for k in REAL_K_SWEEP if results[k][1] <= REAL_NOISE_GAIN)
+    restored = results[chosen][0]
+    below = restored < 0
+    outside = below | (restored > 1)
+    # where do the out-of-range values come from: dark areas, or clipped highlights?
+    clipped_here = downsample((full.max(axis=2) >= 254 / 255).astype(float), factor) > 0
+    near_clipping = near_motion(clipped_here, length, angle)
+    outside_pixels = outside.any(axis=2)
     lines += [f"rule: the smallest K whose noise gain is at most {REAL_NOISE_GAIN:g}: chosen K = {chosen:g}",
+              f"at K = {chosen:g}: {below.sum() / outside.sum():.1%} of the values outside [0, 1] are below 0, and "
+              f"{below[image < 0.1].sum() / below.sum():.1%} of those are where the blurred photo is below 0.1; "
+              f"{(outside_pixels & near_clipping).sum() / outside_pixels.sum():.1%} of the pixels with a value outside "
+              "[0, 1] lie within L, along the motion, of a pixel that is clipped at full size",
               "no psnr or ssim: the sharp original does not exist"]
     write_table(out / "real_blur.txt", lines)
 
@@ -372,7 +395,6 @@ def real_blur(out):
         ax.axis("off")
     save_figure(fig, out / "real_blur_deblurred.png")
 
-    restored = results[chosen][0]
     third = rows // 3
     band = slice(max(cols // 2 - 175, 0), min(cols // 2 + 175, cols))
     fig, axes = plt.subplots(2, 3, figsize=(15, 9))
