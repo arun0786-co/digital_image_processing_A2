@@ -13,14 +13,15 @@ component labelling.
 
 ## Setup
 
-The supplied images and my own photos are not in the repository. Put the
-extracted `A2/` folder from the handout zip in the repository root, so that for
-example `A2/Q1,4/q1.png` exists, and the photos in `photos/`:
+The handout (`DIP_A2.pdf`), the supplied images (`A2/`, as extracted from the
+handout zip) and my own photos (`photos/`) are in the repository, so the
+experiments run from a fresh clone:
 
 ```text
-photos/noisy.jpg              own noisy photo (5.2)
-photos/blur1.jpg              own motion-blurred photo (6.4)
-photos/reference_for_blur.jpg sharp photo of the same scene, a control for the blur estimate
+photos/noisy.jpg                own noisy photo (5.2)
+photos/blur1.jpg                own motion-blurred photo of a laptop keyboard (6.4)
+photos/reference_for_blur.jpg   sharp photo of the same keyboard, a control for the blur estimate
+photos/reference_for_noise.jpg  a brighter shot of the same notepad, not used by the code
 ```
 
 ```text
@@ -53,6 +54,9 @@ are tuned.
 ## Layout
 
 ```text
+DIP_A2.pdf         the handout
+A2/                the supplied images
+photos/            my own photos for 5.2 and 6.4
 src/common/        image io, metrics, padding and fft helpers, plotting, machine info
 src/problem_k/     algorithms for problem k and experiments.py, its experiment driver
 src/run_experiments.py
