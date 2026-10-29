@@ -1,4 +1,4 @@
-problem 1, started 2026-10-29 19:01:06
+problem 1, started 2026-10-29 23:28:24
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -15,16 +15,16 @@ time: median of 41 interleaved runs of fft2(image), fft2(kernel), product, ifft2
 memory: tracemalloc peak of the same pipeline
 
 grid                         P     prime factors  (P/N)^2  P^2logP ratio   time ms  time ratio  peak MiB  mem ratio
-N (circular)               512               2^9   1.0000         1.0000     7.450       1.000     16.00      1.000
-N + M - 1                  516          2^2*3*43   1.0157         1.0170     9.892       1.328     16.25      1.016
-next_fast_len real         540         2^2*3^3*5   1.1124         1.1219     6.574       0.882     17.80      1.112
-next_fast_len complex      525           3*5^2*7   1.0514         1.0557     6.036       0.810     16.83      1.051
-2N (problem 2 rule)       1024              2^10   4.0000         4.4444    34.521       4.634     64.00      4.000
+N (circular)               512               2^9   1.0000         1.0000    15.421       1.000     16.00      1.000
+N + M - 1                  516          2^2*3*43   1.0157         1.0170    25.399       1.647     16.25      1.016
+next_fast_len real         540         2^2*3^3*5   1.1124         1.1219    16.726       1.085     17.80      1.112
+next_fast_len complex      525           3*5^2*7   1.0514         1.0557    17.617       1.142     16.83      1.051
+2N (problem 2 rule)       1024              2^10   4.0000         4.4444    72.163       4.679     64.00      4.000
 
-scipy.signal.fftconvolve(mode='same') on the same input: 3.102 ms
+scipy.signal.fftconvolve(mode='same') on the same input: 6.105 ms
 it pads each axis to next_fast_len(516, real=True) = 540 and uses rfftn
 
   saved results/problem_1/padding_cost.txt
-  done in 3.34 s
+  done in 7.74 s
 
-problem 1 finished in 3.3 s
+problem 1 finished in 7.7 s

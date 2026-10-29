@@ -1,4 +1,4 @@
-problem 1, started 2026-10-29 19:00:50
+problem 1, started 2026-10-29 23:27:57
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -43,6 +43,6 @@ phase change angle(F_s / F) at sample frequencies (rad)
 (200, 300)  (-100, 140)     0.196350    0.196350    1.87e-14
 
   saved results/problem_1/shift_theorem_table.txt
-  done in 0.10 s
+  done in 0.24 s
 
-problem 1 finished in 0.1 s
+problem 1 finished in 0.2 s

@@ -1,4 +1,4 @@
-problem 1, started 2026-10-29 19:00:53
+problem 1, started 2026-10-29 23:28:01
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -27,6 +27,6 @@ random 7x7 kernel, spectrum samples
 (-200, 17)     -5.036941e+03+9.049523e+03j   -5.036941e+03+9.049523e+03j
 
   saved results/problem_1/convolution_theorem_table.txt
-  done in 0.19 s
+  done in 0.36 s
 
-problem 1 finished in 0.2 s
+problem 1 finished in 0.4 s

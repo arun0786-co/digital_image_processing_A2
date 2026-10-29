@@ -1,4 +1,4 @@
-problem 1, started 2026-10-29 19:00:48
+problem 1, started 2026-10-29 23:27:52
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -20,6 +20,6 @@ real degrees of freedom: 2*131070 pair values + 4 real = 262144 = M N
 
   saved results/problem_1/conjugate_symmetry.txt
   saved results/problem_1/conjugate_symmetry.png
-  done in 0.17 s
+  done in 0.32 s
 
-problem 1 finished in 0.2 s
+problem 1 finished in 0.3 s

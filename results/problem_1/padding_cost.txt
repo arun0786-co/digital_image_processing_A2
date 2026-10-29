@@ -3,11 +3,11 @@ time: median of 41 interleaved runs of fft2(image), fft2(kernel), product, ifft2
 memory: tracemalloc peak of the same pipeline
 
 grid                         P     prime factors  (P/N)^2  P^2logP ratio   time ms  time ratio  peak MiB  mem ratio
-N (circular)               512               2^9   1.0000         1.0000     7.592       1.000     16.00      1.000
-N + M - 1                  516          2^2*3*43   1.0157         1.0170     9.811       1.292     16.25      1.016
-next_fast_len real         540         2^2*3^3*5   1.1124         1.1219     6.472       0.852     17.80      1.112
-next_fast_len complex      525           3*5^2*7   1.0514         1.0557     5.932       0.781     16.83      1.051
-2N (problem 2 rule)       1024              2^10   4.0000         4.4444    36.503       4.808     64.00      4.000
+N (circular)               512               2^9   1.0000         1.0000    16.620       1.000     16.00      1.000
+N + M - 1                  516          2^2*3*43   1.0157         1.0170    21.869       1.316     16.25      1.016
+next_fast_len real         540         2^2*3^3*5   1.1124         1.1219    17.552       1.056     17.80      1.112
+next_fast_len complex      525           3*5^2*7   1.0514         1.0557    14.816       0.891     16.83      1.051
+2N (problem 2 rule)       1024              2^10   4.0000         4.4444    67.640       4.070     64.00      4.000
 
-scipy.signal.fftconvolve(mode='same') on the same input: 3.229 ms
+scipy.signal.fftconvolve(mode='same') on the same input: 6.806 ms
 it pads each axis to next_fast_len(516, real=True) = 540 and uses rfftn

@@ -1,4 +1,4 @@
-problem 1, started 2026-10-29 19:00:58
+problem 1, started 2026-10-29 23:28:12
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -41,6 +41,6 @@ zero-phase image r0 = idft2(|F|) (1.2b)
   saved results/problem_1/phase_magnitude.txt
   saved results/problem_1/phase_magnitude.png
   saved results/problem_1/phase_magnitude_zoom.png
-  done in 0.77 s
+  done in 1.46 s
 
-problem 1 finished in 0.8 s
+problem 1 finished in 1.5 s
