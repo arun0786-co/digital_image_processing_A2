@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 from common.io_utils import load_gray
 from common.metrics import SSIM_NOTE, evaluate
 from common.paths import input_path, results_dir
-from common.plotting import FIGSIZE, save_figure, write_table
+from common.plotting import FIGSIZE, panel_grid, save_figure, write_table
 from problem_4.bilateral import bilateral
 from problem_4.kuwahara import kuwahara, soft_kuwahara
 
@@ -123,22 +123,28 @@ def comparison(out):
     lines += ["", f"edge band: pixels within {EDGE_MARGIN} px of a ground-truth jump larger than {EDGE_STEP}"]
     write_table(out / "edge_preserving_table.txt", lines)
 
+    # the whole images with the crops numbered, then one figure per crop, two to a row
     panels = [("clean", clean), ("noisy", noisy)] + list(outputs.items())
-    fig, axes = plt.subplots(len(CROPS) + 1, len(panels), figsize=(3.2 * len(panels), 3.3 * (len(CROPS) + 1)))
-    for column, (name, data) in enumerate(panels):
-        axes[0, column].imshow(np.clip(data, 0, 255), cmap="gray", vmin=0, vmax=255)
-        axes[0, column].set_title(name, fontsize=8)
-        for _, rows_, cols_ in CROPS:
-            axes[0, column].add_patch(Rectangle((cols_.start, rows_.start), 64, 64, fill=False, ec="tab:red", lw=0.8))
-        for row, (crop_name, rows_, cols_) in enumerate(CROPS, start=1):
-            axes[row, column].imshow(np.clip(data[rows_, cols_], 0, 255), cmap="gray", vmin=0, vmax=255,
-                                     interpolation="nearest")
-            axes[row, column].set_title(crop_name, fontsize=8)
-    for ax in axes.ravel():
+    fig, axes = panel_grid(len(panels))
+    for ax, (name, data) in zip(axes, panels):
+        ax.imshow(np.clip(data, 0, 255), cmap="gray", vmin=0, vmax=255)
+        ax.set_title(name, fontsize=10)
+        for number, (_, rows_, cols_) in enumerate(CROPS, start=1):
+            ax.add_patch(Rectangle((cols_.start, rows_.start), 64, 64, fill=False, ec="tab:red", lw=0.8))
+            ax.text(cols_.start, rows_.start - 6, str(number), color="tab:red", fontsize=10)
         ax.axis("off")
     fig.suptitle(f"P4.1b matched {MAIN_WINDOW}x{MAIN_WINDOW} kuwahara and bilateral, noise sigma {NOISE_SIGMA:g}",
-                 fontsize=10)
+                 fontsize=11)
     save_figure(fig, out / "edge_preservation_comparison.png")
+
+    for number, (crop_name, rows_, cols_) in enumerate(CROPS, start=1):
+        fig, axes = panel_grid(len(panels), width=2.8, height=2.9)
+        for ax, (name, data) in zip(axes, panels):
+            ax.imshow(np.clip(data[rows_, cols_], 0, 255), cmap="gray", vmin=0, vmax=255, interpolation="nearest")
+            ax.set_title(name, fontsize=10)
+            ax.axis("off")
+        fig.suptitle(f"P4.1b crop {number}: {crop_name}", fontsize=11)
+        save_figure(fig, out / f"edge_preservation_crop_{number}.png")
 
 
 def edge_band(clean):
@@ -195,20 +201,20 @@ def kuwahara_blockiness(out):
                          f"{band_rmse(clean, result, edges):11.3f}")
     write_table(out / "blockiness.txt", lines)
 
-    crops = [RAMP_CROP, CROPS[0]]
-    fig, axes = plt.subplots(len(crops), 1 + len(results), figsize=(3.3 * (1 + len(results)), 3.0 * len(crops)))
-    for row, (crop_name, rows_, cols_) in enumerate(crops):
-        axes[row, 0].imshow(noisy[rows_, cols_], cmap="gray", vmin=0, vmax=255, interpolation="nearest")
-        axes[row, 0].set_title(f"noisy, {crop_name}", fontsize=8)
-        for column, ((window, name), result) in enumerate(results.items(), start=1):
-            axes[row, column].imshow(np.clip(result[rows_, cols_], 0, 255), cmap="gray",
-                                     vmin=40 if row == 0 else 0, vmax=130 if row == 0 else 255,
-                                     interpolation="nearest")
-            axes[row, column].set_title(f"{name} {window}x{window}", fontsize=8)
-    for ax in axes.ravel():
-        ax.axis("off")
-    fig.suptitle("P4.2b classical vs soft kuwahara (ramp row shown with a narrowed grey range 40-130)", fontsize=10)
-    save_figure(fig, out / "blockiness.png")
+    # one figure per crop: classical and soft side by side for each window, the noisy input last
+    for key, (crop_name, rows_, cols_) in [("ramp", RAMP_CROP), ("corner", CROPS[0])]:
+        low, high = (40, 130) if key == "ramp" else (0, 255)
+        fig, axes = panel_grid(len(results) + 1, width=3.2, height=2.9)
+        for ax, ((window, name), result) in zip(axes, results.items()):
+            ax.imshow(np.clip(result[rows_, cols_], 0, 255), cmap="gray", vmin=low, vmax=high,
+                      interpolation="nearest")
+            ax.set_title(f"{name} {window}x{window}", fontsize=10)
+        axes[-1].imshow(noisy[rows_, cols_], cmap="gray", vmin=0, vmax=255, interpolation="nearest")
+        axes[-1].set_title("noisy input (grey range 0-255)", fontsize=10)
+        for ax in axes:
+            ax.axis("off")
+        fig.suptitle(f"P4.2b {crop_name}, outputs shown with grey range {low}-{high}", fontsize=11)
+        save_figure(fig, out / f"blockiness_{key}.png")
 
 
 def op_counts(window):
@@ -378,16 +384,17 @@ def ncr_breakdown(out):
     ax.legend(fontsize=8)
     save_figure(fig, out / "ncr_breakdown.png")
 
+    # one row per noise level: the noisy step next to the bilateral output
     examples = [0.1, 0.3, 0.6, 1.0]
-    fig, axes = plt.subplots(2, len(examples), figsize=(3.2 * len(examples), 6.4))
-    for column, ncr in enumerate(examples):
+    fig, axes = plt.subplots(len(examples), 2, figsize=(5.6, 4.6 * len(examples)))
+    for row, ncr in enumerate(examples):
         sigma = ncr * step
         noisy = clean + np.random.default_rng(7).normal(0.0, sigma, clean.shape)
         result = bilateral(noisy, NCR_SIGMA_S, RANGE_FACTOR * sigma, radius=NCR_RADIUS)
-        axes[0, column].imshow(noisy, cmap="gray", vmin=0, vmax=250)
-        axes[0, column].set_title(f"noisy, NCR = {ncr}", fontsize=9)
-        axes[1, column].imshow(result, cmap="gray", vmin=0, vmax=250)
-        axes[1, column].set_title("bilateral output", fontsize=9)
+        axes[row, 0].imshow(noisy, cmap="gray", vmin=0, vmax=250)
+        axes[row, 0].set_title(f"noisy, NCR = {ncr}", fontsize=10)
+        axes[row, 1].imshow(result, cmap="gray", vmin=0, vmax=250)
+        axes[row, 1].set_title(f"bilateral output, NCR = {ncr}", fontsize=10)
     for ax in axes.ravel():
         ax.axis("off")
     save_figure(fig, out / "ncr_examples.png")
