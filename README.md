@@ -1,7 +1,6 @@
 # Digital Image Processing, Assignment 2
 
-Problems 1 to 6 of `DIP_A2.pdf` (problem 7 appears in the marks table but has no
-text in the handout, so it is out of scope). The report is `report/report.pdf`.
+Problems 1 to 6 of `DIP_A2.pdf`. The report is `report/report.pdf`.
 
 Every operation a problem asks to implement is written with NumPy array
 arithmetic, including the PSNR and SSIM metrics and the connected-component
