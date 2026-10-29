@@ -232,9 +232,10 @@ def comparison(out):
                   "channel at 255, so the light is clipped in the jpeg itself"]
     write_table(out / "local_contrast.txt", lines)
 
+    # a 180x180 shadow crop, kept inside the image
     rows, cols = np.nonzero(shadow)
-    centre_row = int(np.percentile(rows, 70))
-    centre_col = int(np.percentile(cols, 30))
+    centre_row = min(max(int(np.percentile(rows, 70)), 90), original.shape[0] - 90)
+    centre_col = min(max(int(np.percentile(cols, 30)), 90), original.shape[1] - 90)
     crop = (slice(centre_row - 90, centre_row + 90), slice(centre_col - 90, centre_col + 90))
     # two figures, two to a row: the whole outputs (crop boxed in green), then the crops
     fig, axes = panel_grid(len(results), width=3.4, height=4.3)
