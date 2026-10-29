@@ -7,8 +7,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from problem_4.bilateral import bilateral
-from problem_5.wiener import (estimate_noise_sigma, noise_power_units, padded_spectrum,
-                              radial_average, wiener_denoise, wiener_gain)
+from problem_5.wiener import (estimate_noise_sigma, flat_region_sigma, noise_power_units, noise_tiles,
+                              padded_spectrum, radial_average, remove_plane, wiener_denoise, wiener_gain)
 
 
 class WienerTests(unittest.TestCase):
@@ -44,6 +44,20 @@ class WienerTests(unittest.TestCase):
         plane = 0.2 + 0.001 * rows + 0.002 * cols
         estimate = estimate_noise_sigma(plane + rng.normal(0, 0.05, plane.shape))
         self.assertAlmostEqual(estimate, 0.05, delta=0.003)
+
+    def test_remove_plane_leaves_nothing_of_a_plane(self):
+        rows, cols = np.indices((16, 20))
+        tile = np.stack([0.3 + 0.01 * rows - 0.02 * cols, 0.5 + 0.03 * cols, 0.1 * np.ones((16, 20))], axis=2)
+        self.assertLess(np.abs(remove_plane(tile)).max(), 1e-12)
+
+    def test_flat_tiles_recover_white_noise_sigma_under_shading(self):
+        rng = np.random.default_rng(5)
+        rows, cols = np.indices((256, 256))
+        shading = (0.2 + 0.002 * rows + 0.001 * cols)[..., None]
+        image = shading + rng.normal(0, 0.02, (256, 256, 3))
+        _, tiles = noise_tiles(image, 64)
+        sigma = flat_region_sigma(tiles, 0.5)
+        self.assertTrue(np.allclose(sigma, 0.02, rtol=0.03))
 
 
 class ColourBilateralTests(unittest.TestCase):

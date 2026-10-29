@@ -11,7 +11,8 @@ from common.paths import find_photo, input_path, results_dir
 from common.plotting import FIGSIZE, save_figure, write_table
 from problem_2.filters import make_filter
 from problem_4.bilateral import bilateral
-from problem_5.wiener import estimate_noise_sigma, oracle_wiener, wiener_denoise
+from problem_5.wiener import (estimate_noise_sigma, flat_region_sigma, noise_tiles, oracle_wiener,
+                              wiener_denoise)
 
 REFERENCE_FACTOR = 2
 SIGMAS = [5, 10, 20, 40]
@@ -26,6 +27,11 @@ MISSPEC_SCALES = [0.5, 1.0, 2.0]
 EDGE_SHARE = 10
 FLAT_SHARE = 50
 REAL_CROP = (1024, 1536)
+NOISE_TILE = 64
+FLAT_TILE_SHARE = 0.1
+BRIGHTNESS_BINS = 5
+JPEG_BLOCK = 8
+SPECTRUM_BANDS = [(0.03, 0.1), (0.1, 0.2), (0.2, 0.3), (0.3, 0.4), (0.4, 0.51)]
 
 CROPS = [("roof edge", slice(400, 528), slice(1056, 1312)),
          ("ridge and sky", slice(192, 320), slice(640, 896)),
@@ -267,15 +273,91 @@ def edge_blur(out):
     save_figure(fig, out / "edge_profile.png")
 
 
-def autocorrelation(residual, lag):
-    a = residual[:, :-lag].ravel()
-    b = residual[:, lag:].ravel()
-    return float(np.corrcoef(a, b)[0, 1])
+def radial_noise_spectrum(tiles):
+    """mean periodogram of hann-windowed tile luminance divided by its mean over all
+    frequencies, so white noise of the same variance gives 1 everywhere (parseval),
+    then averaged over rings one frequency bin wide. rings 0 and 1 are left out because
+    the plane removal empties them. returns (frequency in cycles/pixel, power)."""
+    size = tiles.shape[1]
+    window = np.outer(np.hanning(size), np.hanning(size))
+    power = np.mean([np.abs(np.fft.fft2(luminance(t) * window)) ** 2 for t in tiles], axis=0)
+    power /= power.mean()
+    fy, fx = np.meshgrid(np.fft.fftfreq(size), np.fft.fftfreq(size), indexing="ij")
+    ring = np.round(np.hypot(fx, fy) * size).astype(int)
+    keep = ring <= size // 2
+    profile = np.bincount(ring[keep], weights=power[keep]) / np.bincount(ring[keep])
+    return np.arange(2, size // 2 + 1) / size, profile[2:]
 
 
-def residual_spectrum(residual):
-    spectrum = np.fft.fftshift(np.fft.fft2(residual - residual.mean()))
-    return np.log1p(np.abs(spectrum))
+def grid_profile(grey, top, left):
+    """mean |difference| between neighbouring pixels, grouped by the position of the
+    pair inside the 8 x 8 jpeg grid. offset 7 is the pair that straddles a block border.
+    top and left place the crop in the full photo."""
+    across = np.abs(np.diff(grey, axis=1))
+    down = np.abs(np.diff(grey, axis=0))
+    col_offset = (np.arange(across.shape[1]) + left) % JPEG_BLOCK
+    row_offset = (np.arange(down.shape[0]) + top) % JPEG_BLOCK
+    return (np.array([across[:, col_offset == k].mean() for k in range(JPEG_BLOCK)]),
+            np.array([down[row_offset == k].mean() for k in range(JPEG_BLOCK)]))
+
+
+def noise_analysis(image, top=0, left=0, brightness=None):
+    """the measurements used to test the white, stationary, signal-independent model.
+    tiles are grouped by the brightness of `brightness` (default: the image itself)."""
+    means, tiles = noise_tiles(image, NOISE_TILE)
+    if brightness is not None:
+        means, _ = noise_tiles(brightness, NOISE_TILE)
+    channel_std = tiles.std(axis=(1, 2))
+    grey_std = luminance(tiles).std(axis=(1, 2))
+    flat = grey_std <= np.quantile(grey_std, FLAT_TILE_SHARE)
+    correlations = np.mean([np.corrcoef(t.reshape(-1, 3).T)[np.triu_indices(3, 1)] for t in tiles[flat]], axis=0)
+    edges = np.quantile(means, np.linspace(0, 1, BRIGHTNESS_BINS + 1))
+    levels = []
+    for low, high in zip(edges[:-1], edges[1:]):
+        members = (means >= low) & (means <= high)
+        level = np.quantile(channel_std[members], FLAT_TILE_SHARE, axis=0).mean()
+        levels.append((means[members].mean() * 255, level * 255))
+    return {"fine": np.array([estimate_noise_sigma(image[..., c]) for c in range(3)]),
+            "flat": flat_region_sigma(tiles, FLAT_TILE_SHARE),
+            "tiles": len(tiles), "flat_tiles": int(flat.sum()),
+            "spectrum": radial_noise_spectrum(tiles[flat]),
+            "correlation": correlations, "levels": levels,
+            "grid": grid_profile(luminance(image) * 255, top, left)}
+
+
+def describe_noise(name, stats):
+    frequency, spectrum = stats["spectrum"]
+    across, down = stats["grid"]
+    lines = [f"{name}",
+             "  sigma, immerkaer (fine scale, assumes white noise), r/g/b: "
+             + ", ".join(f"{s * 255:.2f}" for s in stats["fine"]),
+             f"  sigma, flat tiles ({NOISE_TILE}x{NOISE_TILE}, plane removed, {FLAT_TILE_SHARE:.0%} quantile of "
+             f"{stats['tiles']} tiles), r/g/b: " + ", ".join(f"{s * 255:.2f}" for s in stats["flat"]),
+             f"  flat / immerkaer = {stats['flat'].mean() / stats['fine'].mean():.2f}",
+             f"  noise spectrum of the {stats['flat_tiles']} flattest tiles (luminance, 1 = white):"]
+    for low, high in SPECTRUM_BANDS:
+        band = (frequency >= low) & (frequency < high)
+        lines.append(f"    {low:.2f}-{high:.2f} cycles/pixel: {spectrum[band].mean():.2f}")
+    r_g, r_b, g_b = stats["correlation"]
+    lines.append(f"  noise correlation between channels in the flat tiles: r-g {r_g:.3f}, r-b {r_b:.3f}, g-b {g_b:.3f}")
+    lines.append("  noise std per channel (8-bit, 10 % quantile in each brightness fifth) by tile brightness: "
+                 + ", ".join(f"{mean:.0f}: {level:.2f}" for mean, level in stats["levels"]))
+    lines.append("  mean |horizontal step| by column offset in the 8x8 grid: " + " ".join(f"{v:.2f}" for v in across))
+    lines.append("  mean |vertical step| by row offset in the 8x8 grid:      " + " ".join(f"{v:.2f}" for v in down))
+    lines.append(f"  block-border step / other steps: horizontal {across[-1] / across[:-1].mean():.3f}, "
+                 f"vertical {down[-1] / down[:-1].mean():.3f}; even / odd offsets (0-6): horizontal "
+                 f"{across[0:7:2].mean() / across[1:7:2].mean():.3f}, vertical {down[0:7:2].mean() / down[1:7:2].mean():.3f}")
+    return lines
+
+
+def denoise_both_ways(image, stats):
+    """white-noise wiener with each of the two sigma estimates, and the rms change."""
+    outputs = {}
+    for key in ("fine", "flat"):
+        sigma = float(stats[key].mean())
+        filtered, _ = wiener_denoise(image, sigma, "radial")
+        outputs[key] = (sigma, filtered, float(np.sqrt(np.mean((filtered - image) ** 2))) * 255)
+    return outputs
 
 
 def real_noise(out):
@@ -301,54 +383,79 @@ def real_noise(out):
     crop_rows, crop_cols = min(REAL_CROP[0], rows), min(REAL_CROP[1], cols)
     top, left = (rows - crop_rows) // 2, (cols - crop_cols) // 2
     image = rgb[top:top + crop_rows, left:left + crop_cols]
-    estimates = [estimate_noise_sigma(image[..., c]) for c in range(3)]
-    sigma = float(np.mean(estimates))
-    filtered, _ = wiener_denoise(image, sigma, "radial")
-    residual = luminance(image - filtered)
+    real = noise_analysis(image, top, left)
+    real_out = denoise_both_ways(image, real)
 
-    synthetic_sigma = sigma * 255
-    synthetic_noisy = clean + sigma * unit_noise()
-    synthetic_residual = luminance(synthetic_noisy - wiener_denoise(synthetic_noisy, sigma, "radial")[0])
+    # synthetic comparison: the clean reference plus white noise at the photo's flat-tile sigma
+    synthetic_sigma = float(real["flat"].mean())
+    noise_field = synthetic_sigma * unit_noise()
+    synthetic = clean + noise_field
+    simulated = noise_analysis(synthetic)
+    simulated_out = denoise_both_ways(synthetic, simulated)
+    # the same measurements on the white noise field alone show what the method reports
+    # when the model holds exactly, without the reference image's own texture
+    control = noise_analysis(noise_field, brightness=clean)
 
-    level = luminance(filtered)
-    bins = np.quantile(level, np.linspace(0, 1, 6))
-    local = []
-    for low, high in zip(bins[:-1], bins[1:]):
-        mask = (level >= low) & (level <= high)
-        local.append((low, high, float(residual[mask].std()) * 255))
-
-    lines += ["", f"photo: {photo.name}, {rows}x{cols}, centre crop {crop_rows}x{crop_cols} at full resolution",
-              f"estimated sigma per channel (8-bit levels): "
-              + ", ".join(f"{e * 255:.2f}" for e in estimates) + f"; used sigma = {synthetic_sigma:.2f}",
-              "residual = noisy - wiener output (luminance)",
-              f"residual autocorrelation lag 1 / 2: real {autocorrelation(residual, 1):.3f} / "
-              f"{autocorrelation(residual, 2):.3f}, synthetic white at the same sigma "
-              f"{autocorrelation(synthetic_residual, 1):.3f} / {autocorrelation(synthetic_residual, 2):.3f}",
-              "residual std by output brightness quintile (8-bit levels), signal dependence check:"]
-    lines += [f"  level {low:.3f}-{high:.3f}: {value:.3f}" for low, high, value in local]
+    lines += ["", f"photo: {photo.name}, {rows}x{cols} after exif rotation, centre crop {crop_rows}x{crop_cols} "
+                  f"at full resolution (rows {top}-{top + crop_rows}, columns {left}-{left + crop_cols})", ""]
+    lines += describe_noise("real photo", real)
+    lines += ["", f"synthetic: clean reference + white noise, sigma = {synthetic_sigma * 255:.2f} (the photo's flat-tile value)",
+              "  sigma, immerkaer, r/g/b: " + ", ".join(f"{s * 255:.2f}" for s in simulated["fine"]),
+              "  sigma, flat tiles, r/g/b: " + ", ".join(f"{s * 255:.2f}" for s in simulated["flat"]),
+              f"  flat / immerkaer = {simulated['flat'].mean() / simulated['fine'].mean():.2f}", ""]
+    lines += describe_noise("control: the same white noise field alone (tiles grouped by the clean image's brightness)",
+                            control)
+    lines += ["", "white-noise radial wiener filter with each sigma estimate (rms change of the image, 8-bit):"]
+    for name, outputs in (("real photo", real_out), ("synthetic", simulated_out)):
+        for key in ("fine", "flat"):
+            sigma, _, change = outputs[key]
+            lines.append(f"  {name:11s} {key:5s} sigma {sigma * 255:5.2f}: rms change {change:.2f}")
+    real_residual = luminance(image - real_out["flat"][1])
+    simulated_residual = luminance(synthetic - simulated_out["flat"][1])
     lines.append("no psnr or ssim: there is no clean, registered reference for this photo")
     write_table(out / "real_noise.txt", lines)
 
     crop = (slice(crop_rows // 2 - 128, crop_rows // 2 + 128), slice(crop_cols // 2 - 192, crop_cols // 2 + 192))
-    fig, axes = plt.subplots(2, 3, figsize=(15, 8.6))
-    axes[0, 0].imshow(np.clip(image[crop], 0, 1))
-    axes[0, 0].set_title(f"real noisy photo (crop), sigma est. {synthetic_sigma:.1f}", fontsize=9)
-    axes[0, 1].imshow(np.clip(filtered[crop], 0, 1))
-    axes[0, 1].set_title("white-noise wiener output", fontsize=9)
-    axes[0, 2].imshow(normalise_for_display(residual[crop], 0.5, 99.5), cmap="gray")
-    axes[0, 2].set_title("residual (noisy - output)", fontsize=9)
-    axes[1, 0].imshow(residual_spectrum(residual), cmap="magma")
-    axes[1, 0].set_title("log |DFT| of the real residual", fontsize=9)
-    axes[1, 1].imshow(residual_spectrum(synthetic_residual), cmap="magma")
-    axes[1, 1].set_title("log |DFT| of a synthetic white-noise residual", fontsize=9)
-    axes[1, 2].plot([0.5 * (a + b) for a, b, _ in local], [v for _, _, v in local], "o-")
-    axes[1, 2].set_xlabel("output luminance")
-    axes[1, 2].set_ylabel("residual std (8-bit levels)")
-    axes[1, 2].set_title("noise level vs brightness", fontsize=9)
-    axes[1, 2].grid(True, alpha=0.25)
-    for ax in list(axes[0]) + list(axes[1, :2]):
+    fig, axes = plt.subplots(2, 4, figsize=(19, 7.6))
+    for row, (name, noisy, outputs, residual) in enumerate(
+            [("real photo", image, real_out, real_residual), ("synthetic white noise", synthetic, simulated_out,
+                                                              simulated_residual)]):
+        axes[row, 0].imshow(np.clip(noisy[crop], 0, 1))
+        axes[row, 0].set_title(f"{name} (crop)", fontsize=10)
+        for col, key in ((1, "fine"), (2, "flat")):
+            sigma, filtered, change = outputs[key]
+            axes[row, col].imshow(np.clip(filtered[crop], 0, 1))
+            label = "immerkaer" if key == "fine" else "flat-tile"
+            axes[row, col].set_title(f"wiener, {label} sigma {sigma * 255:.1f} (rms change {change:.1f})", fontsize=10)
+        axes[row, 3].imshow(normalise_for_display(residual[crop], 0.5, 99.5), cmap="gray")
+        axes[row, 3].set_title("residual, input - flat-tile wiener", fontsize=10)
+    for ax in axes.ravel():
         ax.axis("off")
     save_figure(fig, out / "real_noise.png")
+
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
+    for name, stats, style in (("real photo", real, "o-"), ("white noise control", control, "s--")):
+        frequency, spectrum = stats["spectrum"]
+        axes[0].semilogy(frequency, spectrum, style, ms=3, label=name)
+        axes[1].plot(*zip(*stats["levels"]), style, label=name)
+        across, down = stats["grid"]
+        axes[2].plot(range(JPEG_BLOCK), across / across.mean(), style, label=f"{name}, horizontal")
+        axes[2].plot(range(JPEG_BLOCK), down / down.mean(), style, alpha=0.5, label=f"{name}, vertical")
+    axes[0].axhline(1, color="grey", lw=0.8)
+    axes[0].set_xlabel("radial frequency (cycles/pixel)")
+    axes[0].set_ylabel("noise power (1 = white, same variance)")
+    axes[0].set_title("noise spectrum of the flattest tiles", fontsize=10)
+    axes[1].set_ylim(bottom=0)
+    axes[1].set_xlabel("tile mean luminance (8-bit)")
+    axes[1].set_ylabel("noise std (8-bit)")
+    axes[1].set_title("noise level against brightness", fontsize=10)
+    axes[2].set_xlabel("offset of the pixel pair in the 8 x 8 grid (7 = block border)")
+    axes[2].set_ylabel("mean |step| / its average")
+    axes[2].set_title("jpeg block grid", fontsize=10)
+    for ax in axes:
+        ax.grid(True, alpha=0.25)
+        ax.legend(fontsize=8)
+    save_figure(fig, out / "real_noise_stats.png")
 
 
 EXPERIMENTS = {

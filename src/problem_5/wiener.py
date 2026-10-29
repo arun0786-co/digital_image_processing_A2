@@ -1,6 +1,7 @@
 import numpy as np
 
 from common.freq import centred_spectrum, distance_grid, pad_image
+from common.io_utils import luminance
 from common.local_stats import box_mean
 
 
@@ -72,6 +73,36 @@ def oracle_wiener(noisy, clean, sigma):
     clean_spectrum, _ = padded_spectrum(clean)
     gain = wiener_gain(np.abs(clean_spectrum) ** 2, noise_power_units(sigma, P))
     return invert(gain * spectrum, noisy.shape)
+
+
+def remove_plane(tile):
+    """tile minus its least-squares plane a + b x + c y per channel, which takes out
+    slow shading so that what is left is noise plus any fine texture."""
+    rows, cols = tile.shape[:2]
+    y, x = np.indices((rows, cols))
+    design = np.stack([np.ones(rows * cols), x.ravel(), y.ravel()], axis=1)
+    values = tile.reshape(rows * cols, -1)
+    coefficients = np.linalg.lstsq(design, values, rcond=None)[0]
+    return (values - design @ coefficients).reshape(tile.shape)
+
+
+def noise_tiles(image, size):
+    """split an rgb image into non-overlapping size x size tiles, remove a plane from
+    each, and return (mean luminance of each tile, the plane-free tiles)."""
+    means, tiles = [], []
+    for top in range(0, image.shape[0] - size + 1, size):
+        for left in range(0, image.shape[1] - size + 1, size):
+            tile = image[top:top + size, left:left + size]
+            means.append(float(luminance(tile).mean()))
+            tiles.append(remove_plane(tile))
+    return np.array(means), np.array(tiles)
+
+
+def flat_region_sigma(tiles, share):
+    """noise std per channel from flat regions: the plane-free std of each tile, taking
+    the `share` quantile over tiles. edges and texture only make a tile's std larger,
+    so the low end of the distribution comes from the flat tiles."""
+    return np.quantile(tiles.std(axis=(1, 2)), share, axis=0)
 
 
 def estimate_noise_sigma(image):
