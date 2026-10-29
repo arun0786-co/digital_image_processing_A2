@@ -2,12 +2,13 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Rectangle
 
 from common.freq import centred_spectrum, filter_image, pad_image
 from common.io_utils import downsample, load_rgb, luminance, normalise_for_display
 from common.local_stats import box_mean, local_std
 from common.paths import input_path, results_dir
-from common.plotting import FIGSIZE, image_grid, save_figure, write_table
+from common.plotting import FIGSIZE, image_grid, panel_grid, save_figure, write_table
 from problem_3.homomorphic import equalise, homomorphic, homomorphic_transfer
 
 TUNNEL_FACTOR = 4
@@ -134,7 +135,7 @@ def log_domain_check(out):
                   f"(input ratio)^gL = {ratios['input I = L R'] ** gamma_low:.2f}"]
     write_table(out / "log_domain_check.txt", lines)
 
-    fig, _ = image_grid([to_display(v) for v in outputs.values()], list(outputs), cols=4, cell=3.4,
+    fig, _ = image_grid([to_display(v) for v in outputs.values()], list(outputs), cell=3.4, aspect=1.25,
                         vmin=0, vmax=1)
     save_figure(fig, out / "log_domain_check.png")
 
@@ -173,6 +174,7 @@ def sweep(out):
              "input gradients that point the other way in the output (halo measure)", "",
              f"{'D0':>4s}{'gL':>6s}{'gH':>6s}" + METRIC_HEADER,
              f"{'input':>16s}" + metric_text(base)]
+    displays = {}
     for D0 in SWEEP_D0:
         images, titles = [], []
         for gamma_low in GAMMA_LOWS:
@@ -180,13 +182,27 @@ def sweep(out):
                 display = to_display(homomorphic(original, D0, gamma_low, gamma_high, SHARPNESS_C))
                 metrics = contrast_metrics(display, original, shadow, bright)
                 table[(D0, gamma_low, gamma_high)] = metrics
+                displays[(D0, gamma_low, gamma_high)] = display
                 lines.append(f"{D0:4d}{gamma_low:6.2f}{gamma_high:6.2f}" + metric_text(metrics))
                 images.append(display)
                 titles.append(f"gL={gamma_low}, gH={gamma_high}, reversal {100 * metrics['reversal']:.1f}%")
+        # the full 3 x 3 grid for each D0, kept as an overview
         fig, _ = image_grid(images, titles, cols=len(GAMMA_HIGHS), cell=3.3, vmin=0, vmax=1)
         fig.suptitle(f"P3.2 homomorphic sweep, D0 = {D0} (rows gL, columns gH)", fontsize=11)
         save_figure(fig, out / f"sweep_grid_d0_{D0}.png")
     good, halo = chosen_settings(table)
+
+    # two to a row for the report: the strongest gamma pair at each D0 next to the good
+    # setting, and the four gamma corners at the good setting's D0
+    strongest = (GAMMA_LOWS[0], GAMMA_HIGHS[-1])
+    picks = {"sweep_d0.png": [(D0,) + strongest for D0 in SWEEP_D0] + [good],
+             "sweep_gamma.png": [(good[0], gl, gh) for gl in (GAMMA_LOWS[-1], GAMMA_LOWS[0])
+                                 for gh in (GAMMA_HIGHS[0], GAMMA_HIGHS[-1])]}
+    for name, settings in picks.items():
+        titles = [f"D0 {D0}, gL {gl}, gH {gh}: reversal {100 * table[(D0, gl, gh)]['reversal']:.1f}%"
+                  + (" (good)" if (D0, gl, gh) == good else "") for D0, gl, gh in settings]
+        fig, _ = image_grid([displays[s] for s in settings], titles, cell=3.4, aspect=1.25, vmin=0, vmax=1)
+        save_figure(fig, out / name)
     lines += ["", f"rule for a good setting: reversal <= {HALO_LIMIT}, bright saturated <= {BLOWOUT_LIMIT}, "
                   "then the largest shadow contrast",
               f"good setting  (D0, gL, gH) = {good}",
@@ -220,18 +236,25 @@ def comparison(out):
     centre_row = int(np.percentile(rows, 70))
     centre_col = int(np.percentile(cols, 30))
     crop = (slice(centre_row - 90, centre_row + 90), slice(centre_col - 90, centre_col + 90))
-    fig, axes = plt.subplots(2, len(results), figsize=(4.2 * len(results), 8.6))
-    for column, (name, display) in enumerate(results.items()):
-        axes[0, column].imshow(display, cmap="gray", vmin=0, vmax=1)
-        axes[0, column].contour(shadow, levels=[0.5], colors="tab:blue", linewidths=0.6)
-        axes[0, column].contour(bright, levels=[0.5], colors="tab:red", linewidths=0.6)
-        axes[0, column].axvline(original.shape[1] // 2, color="tab:orange", lw=0.6)
-        axes[0, column].set_title(name, fontsize=9)
-        axes[1, column].imshow(display[crop], cmap="gray", vmin=0, vmax=1, interpolation="nearest")
-        axes[1, column].set_title("shadow crop (180x180)", fontsize=9)
-        for ax in axes[:, column]:
-            ax.axis("off")
+    # two figures, two to a row: the whole outputs (crop boxed in green), then the crops
+    fig, axes = panel_grid(len(results), width=3.4, height=4.3)
+    for ax, (name, display) in zip(axes, results.items()):
+        ax.imshow(display, cmap="gray", vmin=0, vmax=1)
+        ax.contour(shadow, levels=[0.5], colors="tab:blue", linewidths=0.6)
+        ax.contour(bright, levels=[0.5], colors="tab:red", linewidths=0.6)
+        ax.axvline(original.shape[1] // 2, color="tab:orange", lw=0.6)
+        ax.add_patch(Rectangle((crop[1].start, crop[0].start), 180, 180, fill=False, ec="tab:green", lw=0.9))
+        ax.set_title(name, fontsize=10)
+        ax.axis("off")
     save_figure(fig, out / "homomorphic_comparison.png")
+
+    fig, axes = panel_grid(len(results), width=3.4, height=3.6)
+    for ax, (name, display) in zip(axes, results.items()):
+        ax.imshow(display[crop], cmap="gray", vmin=0, vmax=1, interpolation="nearest")
+        ax.set_title(name, fontsize=10)
+        ax.axis("off")
+    fig.suptitle("P3.2 shadow crop (180x180, green box in the comparison figure)", fontsize=11)
+    save_figure(fig, out / "homomorphic_crops.png")
 
     fig, ax = plt.subplots(figsize=FIGSIZE)
     column = original.shape[1] // 2
