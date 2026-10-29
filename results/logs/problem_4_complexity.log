@@ -1,4 +1,4 @@
-problem 4, started 2026-10-29 18:42:11
+problem 4, started 2026-10-29 23:33:36
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -16,26 +16,26 @@ soft kuwahara adds 4 subs (minus min variance), 4 divides by T, 4 exp, 3 adds (w
 bilateral per window tap: 1 sub, 1 square, 1 scale, 1 exp, 1 mult by the spatial weight, 1 mult by the value, 2 adds; plus 1 divide per pixel
 
  window                            filter  add/sub/cmp  mult/div   exp  runtime s
-      5         kuwahara, integral images           35        13     0     0.0142
+      5         kuwahara, integral images           35        13     0     0.0423
       5             kuwahara, direct sums           71        48     0          -
-      5    soft kuwahara, integral images           45        22     4     0.0147
-      5                         bilateral           75       101    25     0.0360
-      7         kuwahara, integral images           35        13     0     0.0137
+      5    soft kuwahara, integral images           45        22     4     0.0309
+      5                         bilateral           75       101    25     0.0778
+      7         kuwahara, integral images           35        13     0     0.0234
       7             kuwahara, direct sums          127        76     0          -
-      7    soft kuwahara, integral images           45        22     4     0.0161
-      7                         bilateral          147       197    49     0.0712
-     11         kuwahara, integral images           35        13     0     0.0167
+      7    soft kuwahara, integral images           45        22     4     0.0308
+      7                         bilateral          147       197    49     0.1431
+     11         kuwahara, integral images           35        13     0     0.0268
      11             kuwahara, direct sums          287       156     0          -
-     11    soft kuwahara, integral images           45        22     4     0.0188
-     11                         bilateral          363       485   121     0.1833
-     15         kuwahara, integral images           35        13     0     0.0146
+     11    soft kuwahara, integral images           45        22     4     0.0359
+     11                         bilateral          363       485   121     0.3576
+     15         kuwahara, integral images           35        13     0     0.0357
      15             kuwahara, direct sums          511       268     0          -
-     15    soft kuwahara, integral images           45        22     4     0.0153
-     15                         bilateral          675       901   225     0.3299
+     15    soft kuwahara, integral images           45        22     4     0.0279
+     15                         bilateral          675       901   225     0.5626
 
 runtimes: median of 3 runs on the 512x512 noisy q4 image
 
   saved results/problem_4/complexity.txt
-  done in 4.23 s
+  done in 8.00 s
 
-problem 4 finished in 4.2 s
+problem 4 finished in 8.0 s

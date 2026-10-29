@@ -1,4 +1,4 @@
-problem 4, started 2026-10-29 18:42:03
+problem 4, started 2026-10-29 23:33:21
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -26,6 +26,9 @@ edge band: pixels within 3 px of a ground-truth jump larger than 5.0
 
   saved results/problem_4/edge_preserving_table.txt
   saved results/problem_4/edge_preservation_comparison.png
-  done in 2.76 s
+  saved results/problem_4/edge_preservation_crop_1.png
+  saved results/problem_4/edge_preservation_crop_2.png
+  saved results/problem_4/edge_preservation_crop_3.png
+  done in 5.98 s
 
-problem 4 finished in 2.8 s
+problem 4 finished in 6.0 s
