@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 18:55:05
+problem 5, started 2026-10-29 23:34:29
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -53,7 +53,9 @@ oracle = a parameter or spectrum taken from the clean reference
 bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0, 4.0, 6.0]; colour range distance, radius ceil(3 s_s)
 
   saved results/problem_5/denoising_table.txt
-  saved results/problem_5/denoising_crops.png
-  done in 200.74 s
+  saved results/problem_5/denoising_crops_roof_edge.png
+  saved results/problem_5/denoising_crops_ridge_and_sky.png
+  saved results/problem_5/denoising_crops_foliage.png
+  done in 529.60 s
 
-problem 5 finished in 200.7 s
+problem 5 finished in 529.6 s

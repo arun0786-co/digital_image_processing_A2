@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 18:59:08
+problem 5, started 2026-10-29 23:43:24
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -21,6 +21,6 @@ each value is the mean gain over 0.01 cycles/pixel around the frequency
 
   saved results/problem_5/wiener_gain.txt
   saved results/problem_5/wiener_gain.png
-  done in 23.41 s
+  done in 46.52 s
 
-problem 5 finished in 23.4 s
+problem 5 finished in 46.5 s

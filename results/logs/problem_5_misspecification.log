@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 19:05:12
+problem 5, started 2026-10-29 23:44:15
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -21,6 +21,6 @@ band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
 
   saved results/problem_5/misspecification.txt
   saved results/problem_5/misspecification.png
-  done in 5.81 s
+  done in 11.61 s
 
-problem 5 finished in 5.8 s
+problem 5 finished in 11.6 s

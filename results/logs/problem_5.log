@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 18:47:29
+problem 5, started 2026-10-29 23:46:07
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -53,8 +53,10 @@ oracle = a parameter or spectrum taken from the clean reference
 bilateral tuned on rows 256-768, cols 512-1024 over s_s in [0.5, 1.0, 1.5, 2.0, 3.0], k in [1.0, 1.5, 2.0, 3.0, 4.0, 6.0]; colour range distance, radius ceil(3 s_s)
 
   saved results/problem_5/denoising_table.txt
-  saved results/problem_5/denoising_crops.png
-  done in 202.66 s
+  saved results/problem_5/denoising_crops_roof_edge.png
+  saved results/problem_5/denoising_crops_ridge_and_sky.png
+  saved results/problem_5/denoising_crops_foliage.png
+  done in 363.38 s
 
 == problem 5: wiener_gain
 5.1 radial wiener gain (green channel) at selected radial frequencies
@@ -68,7 +70,7 @@ each value is the mean gain over 0.01 cycles/pixel around the frequency
 
   saved results/problem_5/wiener_gain.txt
   saved results/problem_5/wiener_gain.png
-  done in 7.24 s
+  done in 14.06 s
 
 == problem 5: misspecification
 5.2 wiener at sigma = 20 with assumed noise power scale * S_nn (radial S_ff estimate)
@@ -82,7 +84,7 @@ band rmse in 8-bit levels: edge = top 10 % clean gradient, flat = bottom 50 %
 
   saved results/problem_5/misspecification.txt
   saved results/problem_5/misspecification.png
-  done in 6.02 s
+  done in 18.93 s
 
 == problem 5: edge_blur
 5.2 where the error sits, sigma = 20; rmse in 8-bit levels
@@ -104,7 +106,7 @@ roof-line peak in the profile (row 425, column 1180), luminance:
 
   saved results/problem_5/edge_blur.txt
   saved results/problem_5/edge_profile.png
-  done in 4.18 s
+  done in 10.26 s
 
 == problem 5: real_noise
 5.2c noise estimate check on the synthetic images (immerkaer 1996, per channel, averaged)
@@ -163,7 +165,8 @@ no psnr or ssim: there is no clean, registered reference for this photo
 
   saved results/problem_5/real_noise.txt
   saved results/problem_5/real_noise.png
+  saved results/problem_5/real_noise_synthetic.png
   saved results/problem_5/real_noise_stats.png
-  done in 8.54 s
+  done in 22.51 s
 
-problem 5 finished in 228.6 s
+problem 5 finished in 429.1 s

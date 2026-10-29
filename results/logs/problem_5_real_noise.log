@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 18:47:18
+problem 5, started 2026-10-29 23:45:46
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -66,7 +66,8 @@ no psnr or ssim: there is no clean, registered reference for this photo
 
   saved results/problem_5/real_noise.txt
   saved results/problem_5/real_noise.png
+  saved results/problem_5/real_noise_synthetic.png
   saved results/problem_5/real_noise_stats.png
-  done in 8.12 s
+  done in 16.36 s
 
-problem 5 finished in 8.1 s
+problem 5 finished in 16.4 s

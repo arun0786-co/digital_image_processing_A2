@@ -1,4 +1,4 @@
-problem 5, started 2026-10-29 18:58:29
+problem 5, started 2026-10-29 23:44:32
 cpu         Apple M4 Pro, 12 cores (8 performance + 4 efficiency)
 ram         24 GiB
 os          Darwin 15.7.7 (arm64)
@@ -29,6 +29,6 @@ roof-line peak in the profile (row 425, column 1180), luminance:
 
   saved results/problem_5/edge_blur.txt
   saved results/problem_5/edge_profile.png
-  done in 36.88 s
+  done in 70.14 s
 
-problem 5 finished in 36.9 s
+problem 5 finished in 70.1 s
