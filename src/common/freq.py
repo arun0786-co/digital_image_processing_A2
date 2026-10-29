@@ -38,7 +38,3 @@ def filter_image(image, transfer, pad_mode="constant"):
         transfer = transfer[..., None]
     filtered = np.fft.ifft2(np.fft.ifftshift(spectrum * transfer, axes=(0, 1)), axes=(0, 1))
     return np.real(filtered)[:rows, :cols]
-
-
-def log_magnitude(spectrum):
-    return np.log1p(np.abs(spectrum))

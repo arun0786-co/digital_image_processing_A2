@@ -30,14 +30,6 @@ def downsample(image, factor):
     return image.reshape(shape).mean(axis=(1, 3))
 
 
-def to_uint8(image, peak=255.0):
-    return np.clip(np.round(np.asarray(image) / peak * 255.0), 0, 255).astype(np.uint8)
-
-
-def save_image(image, path, peak=255.0):
-    Image.fromarray(to_uint8(image, peak)).save(path)
-
-
 def normalise_for_display(image, low=0.0, high=100.0):
     """map the [low, high] percentile range to [0, 1] and clip."""
     lo, hi = np.percentile(image, [low, high])
