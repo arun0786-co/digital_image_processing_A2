@@ -9,7 +9,7 @@ from common.freq import centred_spectrum, distance_grid, filter_image, pad_image
 from common.io_utils import load_gray
 from common.metrics import label_components, psnr
 from common.paths import input_path, results_dir
-from common.plotting import FIGSIZE, image_grid, save_figure, write_table
+from common.plotting import FIGSIZE, image_grid, panel_grid, save_figure, write_table
 from problem_2.filters import (apply_filter, make_filter, matched_gaussian_d0, radial_slice,
                                slice_kernel)
 
@@ -113,7 +113,7 @@ def transfer_functions(out):
     distance = np.arange(0, 161)
     families = [("ideal", None, "tab:blue"), ("butterworth", 2, "tab:orange"),
                 ("gaussian", None, "tab:green")]
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    fig, axes = plt.subplots(2, 1, figsize=(8.5, 8.6))
     for kind, n, colour in families:
         label = f"{kind}" + (f" n={n}" if n else "")
         for highpass, style in [(False, "-"), (True, "--")]:
@@ -137,7 +137,7 @@ def transfer_functions(out):
         ax.set_xlabel("D (frequency bins from the centre, P = 1024)")
         ax.set_ylabel("H(D)")
         ax.grid(True, alpha=0.25)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=9)
     save_figure(fig, out / "transfer_functions.png")
 
 
@@ -274,22 +274,22 @@ def ringing_ideal(out):
                      f"{r - LEFT_EDGE:15.1f}{c - LEFT_EDGE:16.1f}{100 * ((1 + os_iso / 100) ** 2 - 1):18.2f}")
     write_table(out / "ideal_ringing_table.txt", lines)
 
-    fig, axes = plt.subplots(2, 2, figsize=(13, 8))
+    fig, axes = plt.subplots(len(RINGING_RADII), 1, figsize=(8, 2.7 * len(RINGING_RADII)))
     window = slice(60, 200)
-    for ax, D0 in zip(axes.ravel(), RINGING_RADII):
+    for ax, D0 in zip(axes, RINGING_RADII):
         ax.plot(columns[window], filtered[D0][PROFILE_ROW, window], color="tab:blue",
-                label=f"measured, row {PROFILE_ROW}")
+                label=f"row {PROFILE_ROW}, measured")
         ax.plot(columns[window], predicted_row(columns[window], D0, P), "--", color="tab:red",
-                label="1-d Si prediction (two edges)")
+                label="Si prediction, two edges")
         ax.plot(columns[window], filtered[D0][corner_rows[D0], window], color="tab:green", lw=0.9,
-                label=f"measured, row {corner_rows[D0]} (through the corner maximum)")
+                label=f"row {corner_rows[D0]}, through the corner maximum")
         ax.axhline(STEP_INSIDE, color="gray", lw=0.6)
         ax.axvline(LEFT_EDGE, color="gray", lw=0.6)
         ax.set_title(f"P2.2a ideal LPF D0 = {D0}: overshoot {overshoot(filtered[D0][PROFILE_ROW]):.2f} %")
         ax.set_xlabel("column x")
         ax.set_ylabel("g")
         ax.grid(True, alpha=0.25)
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=9, loc="upper left")
     save_figure(fig, out / "ideal_ringing_profiles.png")
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 5))
@@ -356,32 +356,34 @@ def filter_grid(out):
     families = [("ideal", None, lambda r: r, "ILPF"),
                 ("butterworth", GRID_ORDER, lambda r: r, f"BLPF n={GRID_ORDER}"),
                 ("gaussian", None, matched_gaussian_d0, "GLPF (matched D0')")]
-    images, titles = [], []
+    # one figure per family, the four radii two to a row
     results = {}
-    for kind, n, radius_of, label in families:
+    for index, (kind, n, radius_of, label) in enumerate(families):
+        images, titles = [], []
         for target, r in zip(POWER_TARGETS, radii):
             g = apply_filter(image, kind, radius_of(r), n=n)
             results[(label, target)] = g
             images.append(g)
             titles.append(f"{label}, r={r:.1f} ({target}%)")
-    fig, axes = image_grid(images, titles, cols=len(radii), cell=3.4)
-    for ax in axes[0]:
-        for _, rows, cols in INSETS:
-            ax.add_patch(Rectangle((cols.start, rows.start), cols.stop - cols.start,
-                                   rows.stop - rows.start, fill=False, ec="tab:red", lw=1))
-    save_figure(fig, out / "filter_grid.png")
+        fig, axes = image_grid(images, titles)
+        if index == 0:
+            for ax in axes:
+                for _, rows, cols in INSETS:
+                    ax.add_patch(Rectangle((cols.start, rows.start), cols.stop - cols.start,
+                                           rows.stop - rows.start, fill=False, ec="tab:red", lw=1))
+        save_figure(fig, out / f"filter_grid_{label.split()[0].lower()}.png")
 
     target = POWER_TARGETS[1]
-    fig, axes = plt.subplots(len(INSETS), 4, figsize=(13, 3.3 * len(INSETS)))
-    for row, (name, rows, cols) in enumerate(INSETS):
+    for name, rows, cols in INSETS:
         panels = [(image, "original")] + [(results[(label, target)], label)
                                            for _, _, _, label in families]
-        for ax, (data, label) in zip(axes[row], panels):
+        fig, axes = panel_grid(len(panels), height=3.4)
+        for ax, (data, label) in zip(axes, panels):
             ax.imshow(data[rows, cols], cmap="gray", vmin=0, vmax=255, interpolation="nearest")
-            ax.set_title(f"{name}: {label}", fontsize=9)
+            ax.set_title(f"{name}: {label}", fontsize=10)
             ax.axis("off")
-    fig.suptitle(f"P2.2c zoomed insets at r = {radii[1]:.1f} ({target}% power)", fontsize=10)
-    save_figure(fig, out / "filter_grid_insets.png")
+        fig.suptitle(f"P2.2c zoomed inset at r = {radii[1]:.1f} ({target}% power)", fontsize=11)
+        save_figure(fig, out / f"filter_grid_insets_{name.replace(' ', '_')}.png")
 
     profile_row = 112
     fig, ax = plt.subplots(figsize=FIGSIZE)
@@ -477,7 +479,7 @@ def psnr_sweep(out):
         best = int(np.argmax(curves[label]))
         best_images.append(filtered(kind, radius_of(radii[best]), n))
         titles.append(f"{label}, D0={radii[best]} ({curves[label][best]:.2f} dB)")
-    fig, _ = image_grid([np.clip(i, 0, 255) for i in best_images], titles, cols=4, cell=3.4)
+    fig, _ = image_grid([np.clip(i, 0, 255) for i in best_images], titles)
     save_figure(fig, out / "psnr_sweep_best.png")
 
 
@@ -551,11 +553,12 @@ def text_repair(out):
               f"range [{ideal.min():.1f}, {ideal.max():.1f}] (gaussian range [{gaussian.min():.1f}, {gaussian.max():.1f}])"]
     write_table(out / "text_repair.txt", lines)
 
+    # one row per image: the whole text, then the zoom
     crop = (slice(30, 140), slice(30, 260))
-    panels = [image, gaussian, ideal, image[crop], gaussian[crop], ideal[crop]]
-    titles = ["original", f"GLPF D0 = {chosen}", f"ILPF D0 = {radius:.1f} (same H = 0.5 radius)",
-              "original (zoom)", "GLPF (zoom)", "ILPF (zoom)"]
-    fig, _ = image_grid(panels, titles, cols=3, cell=4.2)
+    panels = [image, image[crop], gaussian, gaussian[crop], ideal, ideal[crop]]
+    titles = ["original", "original (zoom)", f"GLPF D0 = {chosen}", "GLPF (zoom)",
+              f"ILPF D0 = {radius:.1f} (same H = 0.5 radius)", "ILPF (zoom)"]
+    fig, _ = image_grid(panels, titles, aspect=0.9)
     save_figure(fig, out / "text_repair.png")
 
 
@@ -598,23 +601,26 @@ def highpass(out):
               f"(input std {image.std():.3f})"]
     write_table(out / "highpass.txt", lines)
 
+    # two figures: the filter outputs, then the original next to the ridge maps
     limit = np.percentile(np.abs(outputs[f"BHPF n={HIGHPASS_ORDER}"]), 99.5)
-    fig, axes = plt.subplots(2, 4, figsize=(15, 7.6))
-    panels = [(image, "original", 0, 255)]
-    panels += [(outputs[name], f"{name} (mean {outputs[name].mean():.2f})", -limit, limit) for name, _, _, _ in families]
-    panels += [(emphasised, f"HFE k1={HFE_K1}, k2={HFE_K2}", 0, np.percentile(emphasised, 99.8))]
-    panels += [(outputs[name] > 0, f"{name} > 0 (ridge map)", 0, 1) for name, _, _, _ in families]
-    for ax, (data, title, vmin, vmax) in zip(axes.ravel(), panels):
-        ax.imshow(data, cmap="gray", vmin=vmin, vmax=vmax)
-        ax.set_title(f"P2.3c {title}", fontsize=9)
-        ax.axis("off")
-    save_figure(fig, out / "highpass.png")
+    filtered_panels = [(outputs[name], f"{name} (mean {outputs[name].mean():.2f})", -limit, limit)
+                       for name, _, _, _ in families]
+    filtered_panels += [(emphasised, f"HFE k1={HFE_K1}, k2={HFE_K2}", 0, np.percentile(emphasised, 99.8))]
+    ridge_panels = [(image, "original", 0, 255)]
+    ridge_panels += [(outputs[name] > 0, f"{name} > 0 (ridge map)", 0, 1) for name, _, _, _ in families]
+    for file_name, panels in [("highpass.png", filtered_panels), ("highpass_ridges.png", ridge_panels)]:
+        fig, axes = panel_grid(len(panels))
+        for ax, (data, title, vmin, vmax) in zip(axes, panels):
+            ax.imshow(data, cmap="gray", vmin=vmin, vmax=vmax)
+            ax.set_title(f"P2.3c {title}", fontsize=10)
+            ax.axis("off")
+        save_figure(fig, out / file_name)
 
     crop = (slice(380, 560), slice(80, 300))
     panels = [image[crop], outputs["IHPF"][crop] > 0, outputs[f"BHPF n={HIGHPASS_ORDER}"][crop] > 0,
               outputs["GHPF"][crop] > 0]
     fig, _ = image_grid(panels, ["original", "IHPF > 0", f"BHPF n={HIGHPASS_ORDER} > 0", "GHPF > 0"],
-                        cols=4, cell=3.6, vmin=0, vmax=1)
+                        aspect=0.85, vmin=0, vmax=1)
     fig.axes[0].images[0].set_clim(0, 255)
     save_figure(fig, out / "ridge_maps_zoom.png")
 
