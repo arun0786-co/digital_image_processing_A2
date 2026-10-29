@@ -206,7 +206,7 @@ def sinusoid_recovery(out):
 
     centred = np.fft.fftshift(np.log1p(np.abs(spectrum)))
     half = SINUSOID_SIZE / 2
-    fig, axes = plt.subplots(1, 2, figsize=(11, 5.2))
+    fig, axes = plt.subplots(1, 2, figsize=(9.6, 5.2))
     axes[0].imshow(image, cmap="gray")
     axes[0].set_title("P1.1c synthetic image (4 cosines + offset)")
     axes[0].axis("off")
@@ -249,7 +249,7 @@ def resolution_lines():
 
 def resolution_figure(out):
     size = SINUSOID_SIZE
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
+    fig, axes = plt.subplots(2, 1, figsize=(8, 7.6))
     for ax, pair in zip(axes, [(40.25, 40.75), (40.25, 41.75)]):
         signal = row_signal(pair)
         coarse = np.abs(np.fft.fft(signal))
@@ -265,7 +265,7 @@ def resolution_figure(out):
         ax.set_ylabel("|F(u)|")
         ax.set_title(f"P1.1c two cosines {pair[1] - pair[0]:.2f} cycles/image apart")
         ax.grid(True, alpha=0.25)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=9)
     save_figure(fig, out / "resolution_limit.png")
 
 
@@ -349,17 +349,18 @@ def phase_magnitude(out):
              f"{axis_share(centred_zero, inner):.4f} (those lines are {1022 / image.size:.4f} of the pixels)"]
     write_table(out / "phase_magnitude.txt", lines)
 
+    # two to a row: the input and (a), the prediction case and (b), then the swapped pair
     display = [image / 255,
                normalise_for_display(np.real(phase_only), 0.5, 99.5),
                normalise_for_display(np.real(noise_magnitude_recon), 0.5, 99.5),
+               normalise_for_display(np.log1p(np.abs(np.fft.fftshift(zero_phase_real))), 0.0, 100.0),
                normalise_for_display(np.real(swapped), 0.5, 99.5),
-               normalise_for_display(np.real(swapped_back), 0.5, 99.5),
-               normalise_for_display(np.log1p(np.abs(np.fft.fftshift(zero_phase_real))), 0.0, 100.0)]
+               normalise_for_display(np.real(swapped_back), 0.5, 99.5)]
     titles = ["q1.png", "(a) q1 phase, flat magnitude",
               "prediction case: q1 phase, noise magnitude",
-              "q1 phase, cameraman magnitude", "cameraman phase, q1 magnitude",
-              "(b) q1 magnitude, zero phase (fftshift, log)"]
-    fig, _ = image_grid(display, titles, cols=3, cell=3.6, vmin=0, vmax=1)
+              "(b) q1 magnitude, zero phase (fftshift, log)",
+              "q1 phase, cameraman magnitude", "cameraman phase, q1 magnitude"]
+    fig, _ = image_grid(display, titles, cell=3.8, vmin=0, vmax=1)
     save_figure(fig, out / "phase_magnitude.png")
 
     crop = (slice(60, 260), slice(140, 340))
@@ -367,7 +368,7 @@ def phase_magnitude(out):
             normalise_for_display(np.real(phase_only)[crop], 0.5, 99.5),
             normalise_for_display(np.real(noise_magnitude_recon)[crop], 0.5, 99.5)]
     fig, _ = image_grid(zoom, ["q1 crop", "phase only crop", "noise magnitude crop"],
-                        cols=3, cell=3.6, vmin=0, vmax=1)
+                        cell=3.8, vmin=0, vmax=1)
     save_figure(fig, out / "phase_magnitude_zoom.png")
 
 
@@ -408,25 +409,28 @@ def wraparound(out):
               f"(band of 15 px: {size ** 2 - (size - 30) ** 2})"]
     write_table(out / "wraparound_table.txt", lines)
 
+    # left column: the laplacian's top-left 24x24 corner, right column: the box blur, whole image
     zoom = slice(0, 24)
     limit = np.percentile(np.abs(linear), 99)
-    fig, axes = plt.subplots(2, 3, figsize=(12, 8.2))
-    top = [(circular[zoom, zoom], "5x5 laplacian, circular", "gray", -limit, limit),
-           (linear[zoom, zoom], "5x5 laplacian, zero-padded linear", "gray", -limit, limit),
-           (difference[zoom, zoom], "|circular - linear|", "magma", 0, difference.max())]
-    bottom = [(box_circular, "31x31 box, circular", "gray", 0, 255),
-              (box_linear, "31x31 box, zero-padded linear", "gray", 0, 255),
-              (box_difference, "|circular - linear|", "magma", 0, box_difference.max())]
-    for ax, (data, title, cmap, vmin, vmax) in zip(axes[0], top):
+    fig, axes = plt.subplots(3, 2, figsize=(8, 10.6))
+    left = [(circular[zoom, zoom], "laplacian corner, circular", "gray", -limit, limit),
+            (linear[zoom, zoom], "laplacian corner, zero-padded linear", "gray", -limit, limit),
+            (difference[zoom, zoom], "laplacian corner, |circular - linear|", "magma", 0, difference.max())]
+    right = [(box_circular, "31x31 box, circular", "gray", 0, 255),
+             (box_linear, "31x31 box, zero-padded linear", "gray", 0, 255),
+             (box_difference, "31x31 box, |circular - linear|", "magma", 0, box_difference.max())]
+    for ax, (data, title, cmap, vmin, vmax) in zip(axes[:, 0], left):
         shown = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax, interpolation="nearest")
-        ax.set_title(f"P1.3a top-left 24x24: {title}", fontsize=9)
+        ax.set_title(title, fontsize=10)
         ax.axis("off")
         fig.colorbar(shown, ax=ax, fraction=0.046, pad=0.02)
-    for ax, (data, title, cmap, vmin, vmax) in zip(axes[1], bottom):
+    for ax, (data, title, cmap, vmin, vmax) in zip(axes[:, 1], right):
         shown = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
-        ax.set_title(f"P1.3a full image: {title}", fontsize=9)
+        ax.set_title(title, fontsize=10)
         ax.axis("off")
         fig.colorbar(shown, ax=ax, fraction=0.046, pad=0.02)
+    fig.suptitle("P1.3a left: 5x5 laplacian, top-left 24x24 corner; right: 31x31 box blur, whole image",
+                 fontsize=11)
     save_figure(fig, out / "wraparound.png")
 
 
