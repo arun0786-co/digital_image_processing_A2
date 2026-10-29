@@ -453,7 +453,7 @@ def real_blur(out):
             centre = sign * m / length * np.array([np.cos(theta), np.sin(theta)])
             direction = np.array([-np.sin(theta), np.cos(theta)])
             ends = np.array([centre - 0.5 * direction, centre + 0.5 * direction])
-            axes[0].plot(ends[:, 0], ends[:, 1], color="tab:red", lw=0.6)
+            axes[0].plot(ends[:, 0], ends[:, 1], color="tab:red", lw=1.0)
     axes[0].set_xlim(-0.25, 0.25)
     axes[0].set_ylim(-0.25, 0.25)
     axes[0].set_xlabel("fx (cycles/pixel)")
@@ -500,9 +500,9 @@ def real_blur(out):
         ax.axis("off")
     for name, (rows_, cols_) in parts.items():
         axes[0].add_patch(Rectangle((cols_.start, rows_.start), cols_.stop - cols_.start, rows_.stop - rows_.start,
-                                    fill=False, ec="tab:red", lw=1))
+                                    fill=False, ec="tab:red", lw=1.5))
         axes[0].text(cols_.start, rows_.start - 10, f"{name}: theta {regional[name][0]:.1f}, L {regional[name][1]:.1f}",
-                     color="tab:red", fontsize=8, bbox=dict(facecolor="white", alpha=0.8, lw=0, pad=1))
+                     color="tab:red", fontsize=10, bbox=dict(facecolor="white", alpha=0.85, lw=0, pad=1.5))
     save_figure(fig, out / "real_blur_photo.png")
 
     # one row per part: the global psf next to the part's own psf
