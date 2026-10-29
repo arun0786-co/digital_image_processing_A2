@@ -297,14 +297,25 @@ def edge_step(grey, edge):
     return float(grey[edge - 30:edge - 10, columns].mean() - grey[edge + 20:edge + 40, columns].mean())
 
 
-def echo_below(grey, edge):
-    """rms of the row profile REAL_ECHO_ROWS below a horizontal edge (central half of the
-    columns, straight line removed). with a vertical motion, bands that repeat along the
-    motion show up here."""
+def bands_below(grey, edge):
+    """row profile REAL_ECHO_ROWS below a horizontal edge (central half of the columns,
+    straight line removed). with a vertical motion, bands that repeat along the motion
+    show up here."""
     columns = slice(grey.shape[1] // 4, 3 * grey.shape[1] // 4)
     profile = grey[edge + REAL_ECHO_ROWS[0]:edge + REAL_ECHO_ROWS[1], columns].mean(axis=1)
     t = np.arange(len(profile))
-    return float((profile - np.polyval(np.polyfit(t, profile, 1), t)).std())
+    return profile - np.polyval(np.polyfit(t, profile, 1), t)
+
+
+def echo_below(grey, edge):
+    """rms of the banding below a horizontal edge."""
+    return float(bands_below(grey, edge).std())
+
+
+def band_extremes(grey, edge):
+    """rows below the edge of the darkest and the brightest band."""
+    bands = bands_below(grey, edge)
+    return int(np.argmin(bands)) + REAL_ECHO_ROWS[0], int(np.argmax(bands)) + REAL_ECHO_ROWS[0]
 
 
 def exact_model_control(sharp, image, length, angle):
@@ -392,7 +403,9 @@ def real_blur(out):
     lines += ["", f"echo = rms of the row profile {REAL_ECHO_ROWS[0]} to {REAL_ECHO_ROWS[1]} rows below the strongest "
                   "bright-to-dark edge in the bottom third (central half of the columns, straight line removed)",
               f"{'image':30s}{'edge row':>9s}{'step':>8s}{'blurred':>9s}"
-              + "".join(f"{'K = ' + format(k, 'g'):>11s}" for k in REAL_ECHO_K) + f"{'echo/step at K = ' + format(chosen, 'g'):>22s}"]
+              + "".join(f"{'K = ' + format(k, 'g'):>11s}" for k in REAL_ECHO_K)
+              + f"{'echo/step':>11s}{'dark band':>11s}{'bright band':>13s}   (last three at K = {chosen:g}; "
+                "band positions in rows below the edge)"]
     edge = strongest_falling_edge(grey, 2 * rows // 3)
     cases = [("real photo", grey, edge, {k: luminance(results[k][0]) for k in REAL_ECHO_K})]
     if sharp is not None:
@@ -404,9 +417,10 @@ def real_blur(out):
                       {k: luminance(v) for k, v in control_out.items()}))
     for name, before, at, restored_by_k in cases:
         step = edge_step(before, at)
+        dark, bright = band_extremes(restored_by_k[chosen], at)
         lines.append(f"{name:30s}{at:9d}{step:8.3f}{echo_below(before, at):9.4f}"
                      + "".join(f"{echo_below(restored_by_k[k], at):11.4f}" for k in REAL_ECHO_K)
-                     + f"{echo_below(restored_by_k[chosen], at) / step:22.3f}")
+                     + f"{echo_below(restored_by_k[chosen], at) / step:11.3f}{dark:11d}{bright:13d}")
     if sharp is not None:
         lines.append(f"control noise: white, sigma = {sigma * 255:.2f} (8-bit), the blurred photo's flat-tile level")
 
