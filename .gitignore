@@ -8,12 +8,3 @@ A2/
 DIP_A2.pdf
 DIP_A2.zip
 photos/
-
-# latex intermediates
-report/*.aux
-report/*.log
-report/*.out
-report/*.toc
-
-# compiled helpers
-tools/.build/
