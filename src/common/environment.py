@@ -30,8 +30,8 @@ def machine_lines():
         f"({platform.machine()})",
         f"python      {sys.version.split()[0]}",
         f"numpy       {np.__version__}",
-        f"scipy       {scipy.__version__} (checks only)",
-        f"skimage     {skimage.__version__} (ssim metric and checks only)",
+        f"scipy       {scipy.__version__} (comparisons the handout asks for, sine integral for a plot)",
+        f"skimage     {skimage.__version__} (unit-test checks only)",
         f"matplotlib  {matplotlib.__version__}",
         f"pillow      {PIL.__version__} (image io only)",
     ]

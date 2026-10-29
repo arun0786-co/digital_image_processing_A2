@@ -7,7 +7,7 @@ from scipy.special import sici  # sine integral, only to draw the predicted prof
 
 from common.freq import centred_spectrum, distance_grid, filter_image, pad_image, padded_size
 from common.io_utils import load_gray
-from common.metrics import psnr
+from common.metrics import label_components, psnr
 from common.paths import input_path, results_dir
 from common.plotting import FIGSIZE, image_grid, save_figure, write_table
 from problem_2.filters import (apply_filter, make_filter, matched_gaussian_d0, radial_slice,
@@ -506,7 +506,6 @@ def text_regions(image):
 
 
 def text_metrics(g, regions):
-    from scipy.ndimage import label  # measurement only, counts connected pieces
     text, gaps, background = regions
     darkness = (255.0 - g) / 255.0
     stroke = darkness[text].mean()
@@ -514,7 +513,7 @@ def text_metrics(g, regions):
     back = darkness[background].mean()
     # threshold halfway between the filtered stroke and background levels
     mask = darkness > 0.5 * (stroke + back)
-    count = label(mask, structure=np.ones((3, 3)))[1]
+    count = label_components(mask)[1]
     return stroke, gap, gap / stroke, stroke - back, count
 
 
@@ -561,8 +560,7 @@ def text_repair(out):
 
 
 def ridge_cleanliness(binary):
-    from scipy.ndimage import label  # measurement only
-    labels, count = label(binary, structure=np.ones((3, 3)))
+    labels, count = label_components(binary)
     sizes = np.bincount(labels.ravel())[1:]
     return count, int(np.sum(sizes < 20))
 
