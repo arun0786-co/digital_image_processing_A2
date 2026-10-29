@@ -377,7 +377,7 @@ def real_blur(out):
         sharp_rgb = prepare_photo(sharp)[0]
         sharp_grey = luminance(sharp_rgb)
         sharp_angle, sharp_length, sharp_ceps = windowed_estimate(sharp_grey)
-        lines += ["", f"control: {sharp.name}, a sharp photo of the same keyboard taken by holding the camera still",
+        lines += ["", f"control: {sharp.name}, a sharp photo of the same laptop keyboard taken by holding the camera still",
                   f"  strongest negative cepstrum value at theta = {sharp_angle:.1f} deg, distance {sharp_length:.1f} "
                   f"(value {sharp_ceps.min():.4f}); at the blurred photo's spike position the value is "
                   f"{cepstrum_at(sharp_ceps, angle, length):.4f}"]
